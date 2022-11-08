@@ -309,7 +309,7 @@
       
       <a class="index-excerpt index-excerpt__noimg" href="/2022/11/02/NewStarCTF-%E5%85%AC%E5%BC%80%E8%B5%9BWeek4-pwn-%E8%BF%99%E6%98%AF%E5%A0%86/" target="_self">
         <div>
-          题目环境：glibc-2.31 漏洞分析首先看到题目调用了prctl函数，说明开了沙盒保护机制。使用seccomp-tools检查一下   发现题目禁止了execve的系统调用，我们很容易想到要用orw将flag读取出来；但这题还把open函数给禁用了（是不是很无语），这里我们可以系统调用openat函数去打开文件，openat函数的系统调用号为257。  ​
+          NewStarCTF 公开赛Week4 pwn 这是堆🐎 题目环境：glibc-2.31 漏洞分析首先看到题目调用了prctl函数，说明开了沙盒保护机制。使用seccomp-tools检查一下   发现题目禁止了execve的系统调用，我们很容易想到要用orw将flag读取出来；但这题还把open函数给禁用了（是不是很无语），这里我们可以系统调用openat函数去打开文件，openat函数的系统
         </div>
       </a>
 
