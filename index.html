@@ -243,7 +243,7 @@
       
       <a class="index-excerpt index-excerpt__noimg" href="/2022/11/11/Rop-Emporinm(MIPS)/" target="_self">
         <div>
-          1.ret2win直接找到函数ret2win地址去执行 system(“&#x2F;bin&#x2F;cat flag.txt”)，输出flag 1234567from pwn import*elf = ELF(&#x27;ret2win_mipsel&#x27;)p = process([&#x27;qemu-mipsel&#x27;,&#x27;./ret2win_mipsel&#x27;])
+          与路由环境不同，这里所用到的是glibc，所以需要提前下载好相应的动态链接库 1sudo apt install libc6-mipsel-cross  ​                        MIPS动态库中的外部符号调用，是依赖.got段和.MIPS.stubs段来共同实现的，.MIPS.stubs类似于x86的.plt。 1.ret2win直接找到函数ret2win地址去执行 sy
         </div>
       </a>
 
@@ -335,7 +335,7 @@
       <h1 class="index-header">
         
         <a href="/2022/11/02/%E7%A5%A5%E4%BA%91%E6%9D%AF-sandboxheap%E5%92%8Cbitheap/" target="_self">
-          祥云杯2022 sandboxheap和bitheapk
+          祥云杯2022 sandboxheap和bitheap
         </a>
       </h1>
 
