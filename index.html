@@ -235,8 +235,107 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2022/12/12/bf%E8%A7%A3%E9%87%8A%E5%99%A8/" target="_self">
+          bf解释器
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/12/12/bf%E8%A7%A3%E9%87%8A%E5%99%A8/" target="_self">
+        <div>
+          最近在强网拟态和安洵杯上都出现了bf解释器的题，自己还是头一回见，在此学习一下。 Brainfuck，简称BF，是一种极小化的程序语言       pwnable_bf首先看一道pwnable_bf（buu和pwnable.kr上都有） 其主函数中全局变量p指向全局变量tape的地址，输入一段字符后就让每个字符进入do_brainfuck函数：   ​
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-12-12 13:05" pubdate>
+              2022-12-12
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/11/19/%E5%BC%BA%E7%BD%91%E6%8B%9F%E6%80%812022/" target="_self">
+          强网拟态2022pwn
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/11/19/%E5%BC%BA%E7%BD%91%E6%8B%9F%E6%80%812022/" target="_self">
+        <div>
+          pwn1直接利用格式化字符串 12345678910111213141516171819from pwn import*elf = ELF(&#x27;pwn1&#x27;)p = process(&#x27;./pwn1&#x27;)context.log_level = &#x27;debug&#x27;context.arch = &#x27;amd64&#x27;p.sendline(b&
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-11-19 12:43" pubdate>
+              2022-11-19
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/11/15/DIR-645/" target="_self">
+          D-Link DIR-645路由器溢出
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/11/15/DIR-645/" target="_self">
+        <div>
+          
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-11-15 13:45" pubdate>
+              2022-11-15
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2022/11/11/Rop-Emporinm(MIPS)/" target="_self">
-          Rop Emporinm(MIPS)的几道wp
+          Rop Emporinm(MIPS)几道题的wp
         </a>
       </h1>
 
@@ -309,7 +408,7 @@
       
       <a class="index-excerpt index-excerpt__noimg" href="/2022/11/05/%E5%A4%A9%E6%B4%A5%E5%B8%82%E6%94%BB%E9%98%B2/" target="_self">
         <div>
-          比赛时间只有3个小时，这里我只写出了echo、hero，还一道choice没时间去写了，后续自己在本地复现了一下。 echo格式化字符串漏洞  先利用格式字符串读出canary的值绕过检查 利用格式字符串修改0x601068地址的值，修改为字符串/bin/sh\x00 再利用栈溢出和system函数执行ROP  开始我想一次性修改多个字节，但好像有canary以及缓冲区太小，所以每次只修改一个字节
+          比赛时间只有3个小时，这里我只写出了echo、hero，还一道choice没时间去写了，后续自己在本地复现了一下。 echo格式化字符串漏洞  先利用格式字符串读出canary的值绕过检查 利用格式字符串修改0x601068地址的值，修改为字符串/bin/sh\x00 再利用栈溢出和system函数执行ROP  开始我想一次性修改多个字节，但好像有canary以及缓冲区太小的原因，当时一直不成功，
         </div>
       </a>
 
@@ -460,40 +559,13 @@
     </article>
   </div>
 
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2022/10/31/2022-10-31/" target="_self">
-          
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2022/10/31/2022-10-31/" target="_self">
-        <div>
-          2022-10-31Happy halloween
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2022-10-31 23:50" pubdate>
-              2022-10-31
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
 
 
+  <nav aria-label="navigation">
+    <span class="pagination" id="pagination">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/#board">2</a><a class="extend next" rel="next" href="/page/2/#board"><i class="iconfont icon-arrowright"></i></a>
+    </span>
+  </nav>
 
 
 
