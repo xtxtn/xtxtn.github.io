@@ -270,6 +270,39 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2023/07/17/HWS-PWN/" target="_self">
+          HWS-PWN
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/07/17/HWS-PWN/" target="_self">
+        <div>
+          这次有幸能将三道pwn题都解出了，第一天上大分，但只会解pwn，第二天不断掉分😢。 fmt白给的两次格式化字符串漏洞，最后改__libc_start_main为one_ganget即可。 123456789101112131415161718192021222324from pwn import*elf = ELF(&#x27;fmt&#x27;)libc = elf.libc#p = proc
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-07-17 10:08" pubdate>
+              2023-07-17
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2023/07/06/hfctf2022/" target="_self">
           hfctf2022
         </a>
@@ -519,39 +552,6 @@
             <i class="iconfont icon-date"></i>
             <time datetime="2023-01-12 20:15" pubdate>
               2023-01-12
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2023/01/07/buu2/" target="_self">
-          buu寒假练习2
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2023/01/07/buu2/" target="_self">
-        <div>
-          [OGeek2019 Final]OVM这道vmpwn题分析起来并不难，输入一个整数，最高位的一字节对应着指令，剩下三个字节就对应寄存器和操作数，而漏洞也是很经典的数组越界。 我自己刚开始写的时候总想着先将got表中的值泄漏出来，得到libc的基地址后方便去写入system函数地址，程序虽然提供了打印寄存器这个指令，但是打印后会立马退出execute函数，这样就无法进一步去修改了；看到其他大佬写的
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2023-01-07 15:58" pubdate>
-              2023-01-07
             </time>
           </div>
         
