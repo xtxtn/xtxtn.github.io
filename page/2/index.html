@@ -235,6 +235,39 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2023/01/07/buu2/" target="_self">
+          buu寒假练习2
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/01/07/buu2/" target="_self">
+        <div>
+          [OGeek2019 Final]OVM这道vmpwn题分析起来并不难，输入一个整数，最高位的一字节对应着指令，剩下三个字节就对应寄存器和操作数，而漏洞也是很经典的数组越界。 我自己刚开始写的时候总想着先将got表中的值泄漏出来，得到libc的基地址后方便去写入system函数地址，程序虽然提供了打印寄存器这个指令，但是打印后会立马退出execute函数，这样就无法进一步去修改了；看到其他大佬写的
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-01-07 15:58" pubdate>
+              2023-01-07
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2023/01/01/CVE-2017-17215/" target="_self">
           简单复现CVE-2017-17215
         </a>
@@ -517,39 +550,6 @@
             <i class="iconfont icon-date"></i>
             <time datetime="2022-11-02 01:02" pubdate>
               2022-11-02
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2022/11/01/Dest0g3-520%E8%BF%8E%E6%96%B0%E8%B5%9B-pwn-ez_kiwi/" target="_self">
-          Dest0g3 520迎新赛 pwn ez_kiwi
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2022/11/01/Dest0g3-520%E8%BF%8E%E6%96%B0%E8%B5%9B-pwn-ez_kiwi/" target="_self">
-        <div>
-          漏洞分析题目环境：glibc-2.31 如图在edit的过程中对重新输入的字符长度未有效检查，造成单字节溢出。   这时我们就可利用这一漏洞让堆块重叠，从而泄漏libc的地址 泄漏libc的地址首先想到的就是unsorted bin中的main_arena，由于存在tcache，必须释放8个大小相同才会进入unsorted bin；在add的过程中输入的idx可以小于0xf，但实际上超过9就无法正
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2022-11-01 22:05" pubdate>
-              2022-11-01
             </time>
           </div>
         
