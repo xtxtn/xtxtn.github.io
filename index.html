@@ -235,6 +235,39 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2023/09/25/hwctf2020/" target="_self">
+          华为云ctf2020
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/09/25/hwctf2020/" target="_self">
+        <div>
+          最近研究angr在pwn题中的应用，发现到了2020年华为云ctf中就有这种类型的题，后来发现这场比赛中其它题目的出题点也很有意思，感觉也有必要复现一下。 参考：https://www.wolai.com/ctfhub/2ndDeVF7APBfhEndoMJccF    、 https://github.com/huaweictf/xctf_huaweicloud-qualifier-2020 ​
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-09-25 08:27" pubdate>
+              2023-09-25
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2023/09/20/auto-pwn/" target="_self">
           auto pwn
         </a>
@@ -243,7 +276,7 @@
       
       <a class="index-excerpt index-excerpt__noimg" href="/2023/09/20/auto-pwn/" target="_self">
         <div>
-          这类利用angr去自动探测漏洞的题在很早以前就看到过，但是在CTF中不会直接给附件，而是nc连上后接收一段base64编码，再将其解码为二进制文件，每次得到的二进制文件并不是完全相同；如果不给出完整的docker文件（拥有几个接收到二进制文件也行），不然本地是很难复现的。 这里找的是三个拥有完整docker文件的题和一个可以提供两个二进制文件的题： https://github.com/huawe
+          本文已在看雪上发表：https://bbs.kanxue.com/thread-278971.htm ​                                                        这类利用angr去自动探测漏洞的题在很早以前就看到过，但是在CTF中不会直接给附件，而是nc连上后接收一段base64编码，再将其解码为二进制文件，每次得到的二进制文件并不是完全相同；
         </div>
       </a>
 
@@ -508,39 +541,6 @@
       <a class="index-excerpt index-excerpt__noimg" href="/2023/02/07/xhlj-pwn/" target="_self">
         <div>
           第一次打西湖论剑，只做出了两道pwn题，那个jit到最后也没能看明白😞。 babycalc如下图，输入0x100大小的数据可以修改栈上i的值，通过i与v3的偏移就可以修改栈上的任意一字节，而且输入后存在off-by-one  ​				 这里利用i与v3的偏移修改返回值为 leave ret的地址，只能更改一字节，这里修改为0x400C18，利用off-by-one改变rbp的值来实现栈迁移，具
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2023-02-07 13:11" pubdate>
-              2023-02-07
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2023/02/07/hgame-week4-pwn/" target="_self">
-          hgame-week4-pwn
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2023/02/07/hgame-week4-pwn/" target="_self">
-        <div>
-          without_hooklibc给的是2.36-0ubuntu2_amd64，以前修改__free_hook和__malloc_hook的方法就行不通了，很容易想到使用largebin attack攻击去劫持IO控制流，最后构造house of cat或者house of apple的fake_IO_FILE，和以前我做过强网拟态的一道题很像。 唯一有区别的就是以前常用的mov rdx, qwor
         </div>
       </a>
 
