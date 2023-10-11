@@ -235,6 +235,39 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2023/03/14/pwnhub3%E6%9C%88%E5%85%AC%E5%BC%80%E8%B5%9B&amp;&amp;%E5%86%85%E9%83%A8%E8%B5%9B/" target="_self">
+          pwnhub3月公开赛&amp;&amp;内部赛
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/03/14/pwnhub3%E6%9C%88%E5%85%AC%E5%BC%80%E8%B5%9B&amp;&amp;%E5%86%85%E9%83%A8%E8%B5%9B/" target="_self">
+        <div>
+          sh_v1漏洞在命令 ln 中，它会直接对堆地址复制，造成uaf。 解题思路：  利用uaf，使用gedit修改已经释放的chunk中的key，然后double free。 修改tcache的next指针，使其指向tcache的头，修改0x290的数量为7，释放它就可以得到unsorted bin，进一步泄漏libc地址。 继续编辑tcache的头，修改0x210的数量为7，并在相应的位置写入__
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-03-14 10:14" pubdate>
+              2023-03-14
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2023/02/07/xhlj-pwn/" target="_self">
           西湖论剑-pwn
         </a>
@@ -517,39 +550,6 @@
             <i class="iconfont icon-date"></i>
             <time datetime="2022-11-11 21:57" pubdate>
               2022-11-11
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2022/11/08/DVRF%E8%B7%AF%E7%94%B1%E9%9D%B6%E6%9C%BA/" target="_self">
-          DVRF路由漏洞靶机中几道题的复现
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2022/11/08/DVRF%E8%B7%AF%E7%94%B1%E9%9D%B6%E6%9C%BA/" target="_self">
-        <div>
-          项目地址：https://github.com/praetorian-inc/DVRF 使用binwalk提取固件DVRF_v03.bin 本地环境：kali-2022.2，qemu-7.0 stack_bof_02栈溢出分析使用ida分析，使用strcpy了函数，只要不出现\x00字符，就可以实现栈溢出。 启动程序： 1qemu-mipsel -L ./ -g 1234 ./pwnable/Sh
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2022-11-08 22:52" pubdate>
-              2022-11-08
             </time>
           </div>
         

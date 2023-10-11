@@ -243,7 +243,7 @@
       
       <a class="index-excerpt index-excerpt__noimg" href="/2023/10/11/CVE-2020-14364/" target="_self">
         <div>
-          CVE-2020-14364是qemu4.2.1种存在的漏洞，可以借助usb这个常见设备进行逃逸。 环境搭建和分析可以直接参考：https://xz.aliyun.com/t/8320 ​                                           漏洞分析在do_token_setup函数中的s-&gt;setup_len &gt; sizeof(s-&gt;data_b
+          CVE-2020-14364是qemu4.2.1中存在的漏洞，可以借助usb这个常见设备进行逃逸。 环境搭建和分析可以直接参考：https://xz.aliyun.com/t/8320                                        漏洞分析在do_token_setup函数中的s-&gt;setup_len &gt; sizeof(s-&gt;data_buf)判断
         </div>
       </a>
 
@@ -253,6 +253,39 @@
             <i class="iconfont icon-date"></i>
             <time datetime="2023-10-11 01:24" pubdate>
               2023-10-11
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2023/10/07/CVE-2019-6778/" target="_self">
+          CVE-2019-6778
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/10/07/CVE-2019-6778/" target="_self">
+        <div>
+          最近不知道为什么又重新开始对qemu的漏洞产生了兴趣，可能是V8实在学不明白（感觉太玄学了，😵‍💫） 真正复现建议直接看大佬的文章：https://www.anquanke.com/post/id/197639   、     https://github.com/0xKira/qemu-vm-escape/blob/master/writeup_zh.md 该漏洞存在于qemu3.1.0中，
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-10-07 15:21" pubdate>
+              2023-10-07
             </time>
           </div>
         
@@ -517,39 +550,6 @@
             <i class="iconfont icon-date"></i>
             <time datetime="2023-04-04 16:01" pubdate>
               2023-04-04
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2023/03/14/pwnhub3%E6%9C%88%E5%85%AC%E5%BC%80%E8%B5%9B&amp;&amp;%E5%86%85%E9%83%A8%E8%B5%9B/" target="_self">
-          pwnhub3月公开赛&amp;&amp;内部赛
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2023/03/14/pwnhub3%E6%9C%88%E5%85%AC%E5%BC%80%E8%B5%9B&amp;&amp;%E5%86%85%E9%83%A8%E8%B5%9B/" target="_self">
-        <div>
-          sh_v1漏洞在命令 ln 中，它会直接对堆地址复制，造成uaf。 解题思路：  利用uaf，使用gedit修改已经释放的chunk中的key，然后double free。 修改tcache的next指针，使其指向tcache的头，修改0x290的数量为7，释放它就可以得到unsorted bin，进一步泄漏libc地址。 继续编辑tcache的头，修改0x210的数量为7，并在相应的位置写入__
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2023-03-14 10:14" pubdate>
-              2023-03-14
             </time>
           </div>
         
