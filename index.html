@@ -235,6 +235,39 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2023/10/11/CVE-2020-14364/" target="_self">
+          CVE-2020-14364
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/10/11/CVE-2020-14364/" target="_self">
+        <div>
+          CVE-2020-14364是qemu4.2.1种存在的漏洞，可以借助usb这个常见设备进行逃逸。 环境搭建和分析可以直接参考：https://xz.aliyun.com/t/8320 ​                                           漏洞分析在do_token_setup函数中的s-&gt;setup_len &gt; sizeof(s-&gt;data_b
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-10-11 01:24" pubdate>
+              2023-10-11
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2023/09/25/hwctf2020/" target="_self">
           华为云ctf2020
         </a>
@@ -517,39 +550,6 @@
             <i class="iconfont icon-date"></i>
             <time datetime="2023-03-14 10:14" pubdate>
               2023-03-14
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2023/02/07/xhlj-pwn/" target="_self">
-          西湖论剑-pwn
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2023/02/07/xhlj-pwn/" target="_self">
-        <div>
-          第一次打西湖论剑，只做出了两道pwn题，那个jit到最后也没能看明白😞。 babycalc如下图，输入0x100大小的数据可以修改栈上i的值，通过i与v3的偏移就可以修改栈上的任意一字节，而且输入后存在off-by-one  ​				 这里利用i与v3的偏移修改返回值为 leave ret的地址，只能更改一字节，这里修改为0x400C18，利用off-by-one改变rbp的值来实现栈迁移，具
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2023-02-07 13:11" pubdate>
-              2023-02-07
             </time>
           </div>
         
