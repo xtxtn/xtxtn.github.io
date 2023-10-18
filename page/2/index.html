@@ -235,6 +235,39 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2023/04/04/musl-pwn/" target="_self">
+          musl 1.2.2的两道pwn题
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/04/04/musl-pwn/" target="_self">
+        <div>
+          musl 1.2.2堆的内存管理与以前学的glibc完全不同，是将一块连续的内存划分为相同的大小的chunk（有点像slab），再去由group、meta、malloc_context这些结构体逐级去管理，推荐大家多看几遍0xRGz师傅的musl源码解析文章，这里主要写的是自己在复现musl pwn题中所学到的一些细节。 ​
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-04-04 16:01" pubdate>
+              2023-04-04
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2023/03/14/pwnhub3%E6%9C%88%E5%85%AC%E5%BC%80%E8%B5%9B&amp;&amp;%E5%86%85%E9%83%A8%E8%B5%9B/" target="_self">
           pwnhub3月公开赛&amp;&amp;内部赛
         </a>
@@ -517,39 +550,6 @@
             <i class="iconfont icon-date"></i>
             <time datetime="2022-11-19 12:43" pubdate>
               2022-11-19
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2022/11/11/Rop-Emporinm(MIPS)/" target="_self">
-          Rop Emporinm(MIPS)几道题的wp
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2022/11/11/Rop-Emporinm(MIPS)/" target="_self">
-        <div>
-          与路由环境不同，这里所用到的是glibc，所以需要提前下载好相应的动态链接库 1sudo apt install libc6-mipsel-cross  ​                        MIPS动态库中的外部符号调用，是依赖.got段和.MIPS.stubs段来共同实现的，.MIPS.stubs类似于x86的.plt。 1.ret2win直接找到函数ret2win地址去执行 sy
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2022-11-11 21:57" pubdate>
-              2022-11-11
             </time>
           </div>
         
