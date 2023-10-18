@@ -235,6 +235,39 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2023/10/12/ErrorHandling/" target="_self">
+          Misuse Error Handling Leading To QEMU/KVM Escape
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2023/10/12/ErrorHandling/" target="_self">
+        <div>
+          这里复现《Scavenger：Misuse Error Handling Leading To QEMU&#x2F;KVM Escape》，虽然没有CVE，但也是确确实实存在过可以利用的漏洞。 具体参考：https://zhuanlan.zhihu.com/p/373084566  、 https://github.com/hustdebug/scavenger 漏洞分析漏洞函数在nvme_map
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2023-10-12 13:24" pubdate>
+              2023-10-12
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2023/10/11/CVE-2020-14364/" target="_self">
           CVE-2020-14364
         </a>
@@ -517,39 +550,6 @@
             <i class="iconfont icon-date"></i>
             <time datetime="2023-05-30 19:49" pubdate>
               2023-05-30
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2023/04/04/musl-pwn/" target="_self">
-          musl 1.2.2的两道pwn题
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2023/04/04/musl-pwn/" target="_self">
-        <div>
-          musl 1.2.2堆的内存管理与以前学的glibc完全不同，是将一块连续的内存划分为相同的大小的chunk（有点像slab），再去由group、meta、malloc_context这些结构体逐级去管理，推荐大家多看几遍0xRGz师傅的musl源码解析文章，这里主要写的是自己在复现musl pwn题中所学到的一些细节。 ​
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2023-04-04 16:01" pubdate>
-              2023-04-04
             </time>
           </div>
         
