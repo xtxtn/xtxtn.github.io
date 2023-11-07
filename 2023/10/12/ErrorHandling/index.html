@@ -29,7 +29,7 @@
 <meta property="og:image" content="https://xtxtn.github.io/img/22/Screenshot%202023-10-18%20135521.png">
 <meta property="og:image" content="https://xtxtn.github.io/img/22/Screenshot%202023-10-18%20214923.png">
 <meta property="article:published_time" content="2023-10-12T05:24:33.952Z">
-<meta property="article:modified_time" content="2023-10-18T16:03:41.925Z">
+<meta property="article:modified_time" content="2023-10-19T03:04:28.354Z">
 <meta property="article:author" content="xtxtn">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://xtxtn.github.io/img/22/Screenshot%202023-10-18%20152610.png">
@@ -354,7 +354,7 @@
 <img src="/img/22/Screenshot 2023-10-18 123922.png" srcset="/img/loading.gif" lazyload style="zoom:67%;" />
 
 <p>​                             </p>
-<p>说这个有什么用？因为我一开始nvme_map_prp函数的len参数没设置好，就出现上面这种情况，而且当时我并没有看出问题出在哪。</p>
+<p>说这个有什么用？因为我一开始nvme_map_prp函数的len参数没设置好，就出现上面这种情况，而且当时我并没有发现问题出在哪。</p>
 <p>当时我还针对这种情况想了一个方法去完成利用：伪造chunk的大小为0x50，释放以后进入0x50大小的fastbin，利用nvme_init_sq函数中的<code>sq-&gt;io_req = g_new(NvmeRequest, sq-&gt;size)</code>实现一个大size的堆分配，伪造的chunk进入0x50大小的small bin，先前堆喷已经将0x40大小的small bin清空，calloc申请QEMUTimer结构体将由0x50大小的small bin提供</p>
 <img src="/img/22/Screenshot 2023-10-18 135401.png" srcset="/img/loading.gif" lazyload style="zoom: 67%;" />
 
@@ -451,6 +451,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2023/11/02/ACTF2023/" title="ACTF2023 EasyVirtio">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">ACTF2023 EasyVirtio</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
